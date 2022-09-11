@@ -32,6 +32,7 @@ RUN mkdir -p /opt/cmangos/sql && \
 RUN rm -rfv /opt/src
 
 FROM debian:stable
+LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker
 
 RUN DEBIAN_FRONTEND=noninteractive apt update && \
 	DEBIAN_FRONTEND=noninteractive apt install -q -y \
