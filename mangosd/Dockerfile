@@ -33,6 +33,8 @@ RUN rm -rfv /opt/src
 
 FROM debian:stable
 LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker
+LABEL org.opencontainers.image.authors jrtashjian
+LABEL org.opencontainers.image.licenses GPL-3.0-only
 
 RUN DEBIAN_FRONTEND=noninteractive apt update && \
 	DEBIAN_FRONTEND=noninteractive apt install -q -y \
