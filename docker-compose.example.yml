@@ -4,11 +4,11 @@ services:
   database:
     image: mariadb:latest
     environment:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS:-mangos}"
+      MYSQL_USER: "${DB_USER:-mangos}"
+      MYSQL_PASSWORD: "${DB_PASS:-mangos}"
     ports:
-      - 3306:3306
+      - "${DB_PORT:-3306}:3306"
     volumes:
       - "./data/database:/var/lib/mysql"
 
@@ -16,36 +16,21 @@ services:
     image: ghcr.io/jrtashjian/cmangos-realmd-${CORE_VARIANT}:latest
     depends_on:
       - database
-    environment:
-      - REALMD_DB
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
-      - DB_SERVER
+    env_file: .env
     ports:
       - 3724:3724
     volumes:
-      - "./data/${CORE_VARIANT}_realmd_etc:/opt/cmangos/etc"
+      - "./data/realmd_etc:/opt/cmangos/etc"
       - "/etc/localtime:/etc/localtime:ro"
 
   mangosd:
     image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:latest
     depends_on:
       - database
-      - realmd
-    environment:
-      - REALMD_SERVER=realmd:3724
-      - REALMD_DB
-      - WORLD_DB=${CORE_VARIANT}_world
-      - CHARACTER_DB=${CORE_VARIANT}_characters
-      - LOGS_DB=${CORE_VARIANT}_logs
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
-      - DB_SERVER
+    env_file: .env
     ports:
       - 8085:8085
     volumes:
-      - "./data/${CORE_VARIANT}_mangosd_etc:/opt/cmangos/etc"
+      - "./data/mangosd_etc:/opt/cmangos/etc"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/path/to/extracted/client/data:/opt/cmangos-data:ro"
+      - "./extracted-data:/opt/cmangos-data:ro"
