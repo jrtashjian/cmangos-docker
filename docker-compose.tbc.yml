@@ -43,4 +43,4 @@ services:
     volumes:
       - "./data/mangosd_etc:/opt/cmangos/etc"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/path/to/extracted/client/data:/opt/cmangos-data:ro"
+      - "./extracted-data:/opt/cmangos-data:ro"
