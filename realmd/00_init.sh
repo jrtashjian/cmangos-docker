@@ -1,13 +1,23 @@
 #!/bin/bash
 
 # Environment Vars:
-# - REALMD_DB
-# - MYSQL_ROOT_PASSWORD
-# - MYSQL_USER
-# - MYSQL_PASSWORD
-# - DB_SERVER
+#
+# - DB_HOST
+# - DB_PORT
+# - DB_USER
+# - DB_PASS
+# - DB_NAME
+# - DB_ROOT_PASS
+#
 
-/wait-for-it.sh ${DB_SERVER}:3306 -t 900
+LOGIN_DB_HOST="${LOGIN_DB_HOST:=$DB_HOST}"
+LOGIN_DB_PORT="${LOGIN_DB_PORT:=$DB_PORT}"
+LOGIN_DB_USER="${LOGIN_DB_USER:=$DB_USER}"
+LOGIN_DB_PASS="${LOGIN_DB_PASS:=$DB_PASS}"
+LOGIN_DB_NAME="${LOGIN_DB_NAME:=login}"
+LOGIN_DB_ROOT_PASS="${LOGIN_DB_ROOT_PASS:=$DB_ROOT_PASS}"
+
+/wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
     # Check if intialized
@@ -17,12 +27,12 @@ if [ $? -eq 0 ]; then
         mv -v /opt/cmangos/etc/realmd.conf.dist /opt/cmangos/etc/realmd.conf
 
         # Configure DB Settings
-        sed -i 's/LoginDatabaseInfo.*/LoginDatabaseInfo = "'${DB_SERVER}';3306;'${MYSQL_USER}';'${MYSQL_PASSWORD}';'${REALMD_DB}'"/g' /opt/cmangos/etc/realmd.conf
+        sed -i 's/LoginDatabaseInfo.*/LoginDatabaseInfo = "'${LOGIN_DB_HOST}';'${LOGIN_DB_PORT}';'${LOGIN_DB_USER}';'${LOGIN_DB_PASS}';'${LOGIN_DB_NAME}'"/g' /opt/cmangos/etc/realmd.conf
 
         # Create DB
-        mysql -h $DB_SERVER -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE ${REALMD_DB} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
-        mysql -h $DB_SERVER -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${REALMD_DB}.* TO ${MYSQL_USER}@'%';"
-        mysql -h $DB_SERVER -u $MYSQL_USER -p$MYSQL_PASSWORD $REALMD_DB < /opt/cmangos/sql/realmd.sql
+        mysql -h $LOGIN_DB_HOST -u root -p$LOGIN_DB_ROOT_PASS -e "CREATE DATABASE ${LOGIN_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
+        mysql -h $LOGIN_DB_HOST -u root -p$LOGIN_DB_ROOT_PASS -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGIN_DB_NAME}.* TO ${LOGIN_DB_USER}@'%';"
+        mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /opt/cmangos/sql/realmd.sql
 
         # Create .initialized file
         touch /opt/cmangos/etc/.intialized
@@ -33,6 +43,6 @@ if [ $? -eq 0 ]; then
 	./realmd
 	exit 0;
 else
-    echo "[ERR] Timeout while waiting for ${DB_SERVER}!";
+    echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
     exit 1;
 fi
