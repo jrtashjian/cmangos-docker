@@ -1,18 +1,6 @@
-FROM buildpack-deps:stable as builder
+FROM ghcr.io/jrtashjian/cmangos-builder:latest as builder
 
 ARG CMANGOS_CORE=classic
-
-RUN DEBIAN_FRONTEND=noninteractive apt update && \
-	DEBIAN_FRONTEND=noninteractive apt install -q -y \
-		binutils \
-		build-essential \
-		cmake \
-		grep \
-		libboost-all-dev \
-		libmariadb-dev \
-		libmariadb-dev-compat \
-		mariadb-server && \
-	rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt/src && \
 	git clone --depth 1 https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos
