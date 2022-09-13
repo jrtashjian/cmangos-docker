@@ -1,21 +1,10 @@
 #!/bin/bash
 
-VARIANTS=(classic tbc wotlk)
+variants=(classic tbc wotlk)
+images=(extractors realmd mangosd)
 
-for variant in "${VARIANTS[@]}"
-do
-	echo "";
-	echo "[BUILD] Extractors - $variant";
-	echo "";
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-extractors-$variant:latest" ./extractors --build-arg CMANGOS_CORE=$variant
-
-	echo "";
-	echo "[BUILD] RealmD - $variant";
-	echo "";
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-realmd-$variant:latest" ./realmd --build-arg CMANGOS_CORE=$variant
-
-	echo "";
-	echo "[BUILD] MangosD - $variant";
-	echo "";
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-mangosd-$variant:latest" ./mangosd --build-arg CMANGOS_CORE=$variant
+for variant in "${variants[@]}"; do
+	for image in "${images[@]}"; do
+		docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-$image-$variant:latest" ./$image --build-arg CMANGOS_CORE=$variant
+	done
 done
