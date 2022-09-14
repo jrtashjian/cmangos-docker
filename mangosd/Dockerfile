@@ -24,10 +24,16 @@ LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-dock
 LABEL org.opencontainers.image.authors jrtashjian
 LABEL org.opencontainers.image.licenses GPL-2.0-only
 
-RUN DEBIAN_FRONTEND=noninteractive apt update && \
-	DEBIAN_FRONTEND=noninteractive apt install -q -y \
+ARG CMANGOS_CORE
+ENV CMANGOS_CORE=$CMANGOS_CORE
+
+RUN apt update; \
+	apt install -y \
 		mariadb-client \
-		libmariadb3 && \
+		libmariadb3 \
+		wget \
+		unzip \
+	; \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/cmangos /opt/cmangos

@@ -71,12 +71,23 @@ if [ $? -eq 0 ]; then
         mysql -h $CHARACTERS_DB_HOST -u root -p$CHARACTERS_DB_ROOT_PASS -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${CHARACTERS_DB_NAME}.* TO ${CHARACTERS_DB_USER}@'%';"
         mysql -h $LOGS_DB_HOST -u root -p$LOGS_DB_ROOT_PASS -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGS_DB_NAME}.* TO ${LOGS_DB_USER}@'%';"
 
-        mysql -h $WORLD_DB_HOST -u $WORLD_DB_USER -p$WORLD_DB_PASS $WORLD_DB_NAME < /opt/cmangos/sql/mangos.sql
-        mysql -h $CHARACTERS_DB_HOST -u $CHARACTERS_DB_USER -p$CHARACTERS_DB_PASS $CHARACTERS_DB_NAME < /opt/cmangos/sql/characters.sql
-        mysql -h $LOGS_DB_HOST -u $LOGS_DB_USER -p$LOGS_DB_PASS $LOGS_DB_NAME < /opt/cmangos/sql/logs.sql
+        # INSTALL_FULL_DB
+        if [ "$INSTALL_FULL_DB" = TRUE ]; then
+            wget "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
+            unzip ${CMANGOS_CORE}-all-db.zip
 
-        # Add required data for an empty world
-        mysql -h $WORLD_DB_HOST -u $WORLD_DB_USER -p$WORLD_DB_PASS $WORLD_DB_NAME < /opt/cmangos/sql/initial-tables.sql
+            mysql -h $WORLD_DB_HOST -u $WORLD_DB_USER -p$WORLD_DB_PASS $WORLD_DB_NAME < /${CMANGOS_CORE}mangos.sql
+            mysql -h $CHARACTERS_DB_HOST -u $CHARACTERS_DB_USER -p$CHARACTERS_DB_PASS $CHARACTERS_DB_NAME < /${CMANGOS_CORE}characters.sql
+            mysql -h $LOGS_DB_HOST -u $LOGS_DB_USER -p$LOGS_DB_PASS $LOGS_DB_NAME < /${CMANGOS_CORE}logs.sql
+
+            rm /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
+        else
+            mysql -h $WORLD_DB_HOST -u $WORLD_DB_USER -p$WORLD_DB_PASS $WORLD_DB_NAME < /opt/cmangos/sql/mangos.sql
+            mysql -h $CHARACTERS_DB_HOST -u $CHARACTERS_DB_USER -p$CHARACTERS_DB_PASS $CHARACTERS_DB_NAME < /opt/cmangos/sql/characters.sql
+            mysql -h $LOGS_DB_HOST -u $LOGS_DB_USER -p$LOGS_DB_PASS $LOGS_DB_NAME < /opt/cmangos/sql/logs.sql
+            # Add required data for an empty world
+            mysql -h $WORLD_DB_HOST -u $WORLD_DB_USER -p$WORLD_DB_PASS $WORLD_DB_NAME < /opt/cmangos/sql/initial-tables.sql
+        fi
 
         # Create .initialized file
         touch /opt/cmangos/etc/.intialized

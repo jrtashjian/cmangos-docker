@@ -32,7 +32,18 @@ if [ $? -eq 0 ]; then
         # Create DB
         mysql -h $LOGIN_DB_HOST -u root -p$LOGIN_DB_ROOT_PASS -e "CREATE DATABASE ${LOGIN_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
         mysql -h $LOGIN_DB_HOST -u root -p$LOGIN_DB_ROOT_PASS -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGIN_DB_NAME}.* TO ${LOGIN_DB_USER}@'%';"
-        mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /opt/cmangos/sql/realmd.sql
+
+        # INSTALL_FULL_DB
+        if [ "$INSTALL_FULL_DB" = TRUE ]; then
+            wget "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
+            unzip ${CMANGOS_CORE}-all-db.zip
+
+            mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /${CMANGOS_CORE}realmd.sql
+
+            rm /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
+        else
+            mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /opt/cmangos/sql/realmd.sql
+        fi
 
         # Create .initialized file
         touch /opt/cmangos/etc/.intialized
