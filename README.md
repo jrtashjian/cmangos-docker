@@ -62,11 +62,7 @@ MODERATOR:MODERATOR
 PLAYER:PLAYER
 ```
 
-You are now running an entirely empty world of the core variant you chose!
-
-## Installing the content database
-
-TBD
+You are now running local server for the core variant you chose with the [latest full content database](https://github.com/cmangos?q=-db).
 
 ## Extracting client data
 
@@ -81,15 +77,16 @@ docker run -it \
 Follow the prompts to start the extraction. Initially, you'll probably want to extract everything:
 
 1. Should all dataz (dbc, maps, vmaps and mmaps) be extracted? (y/n)  
-   _YES_
+   `Y <ENTER>`
 2. How many CPU threads should be used for extracting mmaps? (leave empty to use all available threads)  
-   _LEAVE EMPTY_
+   `<ENTER>`
 3. MMap Extraction Delay (leave blank for direct extraction)  
-   _LEAVE BLANK_
+   `<ENTER>`
 4. Would you like the extraction of maps to be high-resolution? (y/n)  
-   _YES_
+   `Y <ENTER>`
 5. Would you like the extraction of vmaps to be high-resolution? (y/n)  
-   _YES_
+   `Y <ENTER>`
+
 ```
 Current Settings:
 Extract DBCs/maps: 1, Extract vmaps: 1, Extract mmaps: 1, Processes for mmaps: all
