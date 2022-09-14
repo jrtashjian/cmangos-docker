@@ -22,6 +22,7 @@ services:
       DB_USER: "${DB_USER:-mangos}"
       DB_PASS: "${DB_PASS:-mangos}"
       DB_ROOT_PASS: "${DB_ROOT_PASS:-mangos}"
+      INSTALL_FULL_DB: "TRUE"
     ports:
       - 3724:3724
     volumes:
@@ -38,6 +39,7 @@ services:
       DB_USER: "${DB_USER:-mangos}"
       DB_PASS: "${DB_PASS:-mangos}"
       DB_ROOT_PASS: "${DB_ROOT_PASS:-mangos}"
+      INSTALL_FULL_DB: "TRUE"
     ports:
       - 8085:8085
     volumes:
