@@ -62,7 +62,7 @@ MODERATOR:MODERATOR
 PLAYER:PLAYER
 ```
 
-You are now running local server for the core variant you chose with the [latest full content database](https://github.com/cmangos?q=-db).
+You are now running local server for the core variant you chose with the [latest full content database](https://github.com/orgs/cmangos/repositories?q=-db).
 
 ## Extracting client data
 
