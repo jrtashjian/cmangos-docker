@@ -1,0 +1,64 @@
+version: "3.5"
+
+services:
+  database:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS:-mangos}"
+      MYSQL_USER: "${DB_USER:-mangos}"
+      MYSQL_PASSWORD: "${DB_PASS:-mangos}"
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - "./data/database:/var/lib/mysql"
+
+  realmd:
+    image: ghcr.io/jrtashjian/cmangos-realmd-${CORE_VARIANT}:latest
+    depends_on:
+      - database
+    env_file: .env
+    ports:
+      - 3724:3724
+    volumes:
+      - "./data/realmd_etc:/opt/cmangos/etc"
+      - "/etc/localtime:/etc/localtime:ro"
+
+  mangosd_one:
+    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:latest
+    depends_on:
+      - database
+    env_file: .env
+    environment:
+      REALM_ID: 1
+      REALM_NAME: "MangosD One"
+      REALM_ADDRESS: "127.0.0.1"
+      REALM_PORT: 8085
+      WORLD_DB_NAME: "mangosd_one_world"
+      CHARACTERS_DB_NAME: "mangosd_one_characters"
+      LOGS_DB_NAME: "mangosd_one_logs"
+    ports:
+      - 8085:8085
+    volumes:
+      - "./data/mangosd_etc:/opt/cmangos/etc"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "./extracted-data:/opt/cmangos-data:ro"
+
+  mangosd_two:
+    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:latest
+    depends_on:
+      - database
+    env_file: .env
+    environment:
+      REALM_ID: 2
+      REALM_NAME: "MangosD Two"
+      REALM_ADDRESS: "127.0.0.1"
+      REALM_PORT: 8086
+      WORLD_DB_NAME: "mangosd_two_world"
+      CHARACTERS_DB_NAME: "mangosd_two_characters"
+      LOGS_DB_NAME: "mangosd_two_logs"
+    ports:
+      - 8086:8085
+    volumes:
+      - "./data/mangosd_etc:/opt/cmangos/etc"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "./extracted-data:/opt/cmangos-data:ro"
