@@ -1,7 +1,5 @@
 # [CMaNGOS](https://cmangos.net) powered by Docker
 
-🚧 **UNDER DEVELOPMENT** 🚧
-
 A collection of Docker images for the CMaNGOS project variants.
 
 ## Supported Variants and Clients
