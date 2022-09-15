@@ -38,6 +38,11 @@ LOGS_DB_PASS="${LOGS_DB_PASS:=$DB_PASS}"
 LOGS_DB_NAME="${LOGS_DB_NAME:=logs}"
 LOGS_DB_ROOT_PASS="${LOGS_DB_ROOT_PASS:=$DB_ROOT_PASS}"
 
+REALM_ID="${REALM_ID:=1}"
+REALM_NAME="${REALM_NAME:=MaNGOS}"
+REALM_ADDRESS="${REALM_ADDRESS:=127.0.0.1}"
+REALM_PORT="${REALM_PORT:=8085}"
+
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
@@ -92,6 +97,18 @@ if [ $? -eq 0 ]; then
         # Create .initialized file
         touch /opt/cmangos/etc/.intialized
     fi
+
+    # Create or update server in realmlist.
+    REALM_FOUND=$(mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "SELECT 1 FROM realmlist WHERE id=${REALM_ID};" 2>&1)
+    if [ -z $REALM_FOUND ]; then
+        echo "NOT EXISTS"
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}',${REALM_PORT});"
+    else
+        echo "EXISTS"
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "UPDATE realmlist SET name='${REALM_NAME}', address='${REALM_ADDRESS}', port=${REALM_PORT} WHERE id=${REALM_ID};"
+    fi
+
+    sed -i 's/RealmID.*/RealmID \= '${REALM_ID}'/g' /opt/cmangos/etc/mangosd.conf
 
 	# Run CMaNGOS
 	cd /opt/cmangos/bin/
