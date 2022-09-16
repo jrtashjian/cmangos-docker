@@ -1,27 +1,21 @@
 #!/bin/bash
 
 PATH_TO_CLIENT=/client
+PATH_TO_OUTPUT=/maps
 PATH_TO_EXTRACTORS=/opt/cmangos/bin/tools
 
-cd $PATH_TO_EXTRACTORS
-files_to_cleanup="$(ls *)"
-cp $PATH_TO_EXTRACTORS/* $PATH_TO_CLIENT/
+echo "$(date): Start extraction of DBCs and map files..."
+$PATH_TO_EXTRACTORS/ad -f 0 -i $PATH_TO_CLIENT -o $PATH_TO_OUTPUT
 
-cd $PATH_TO_CLIENT/
-bash ./ExtractResources.sh
+echo "$(date): Start extraction of vmaps..."
+$PATH_TO_EXTRACTORS/vmap_extractor -l -d $PATH_TO_CLIENT/Data -o $PATH_TO_OUTPUT
 
-mv $PATH_TO_CLIENT/Cameras /maps
-mv $PATH_TO_CLIENT/dbc /maps
-mv $PATH_TO_CLIENT/maps /maps
-mv $PATH_TO_CLIENT/mmaps /maps
-mv $PATH_TO_CLIENT/vmaps /maps
+echo "$(date): Start assembling of vmaps..."
+mkdir $PATH_TO_OUTPUT/vmaps
+$PATH_TO_EXTRACTORS/vmap_assembler $PATH_TO_OUTPUT/Buildings $PATH_TO_OUTPUT/vmaps
 
-# Cleanup client directory
-rm -vf $PATH_TO_CLIENT/MaNGOSExtractor.log
-rm -vf $PATH_TO_CLIENT/MaNGOSExtractor_detailed.log
-rm -vrf $PATH_TO_CLIENT/Buildings
+echo "$(date): Start extraction of mmaps..."
+mkdir $PATH_TO_OUTPUT/mmaps
+$PATH_TO_EXTRACTORS/MoveMapGen --offMeshInput $PATH_TO_EXTRACTORS/offmesh.txt --workdir $PATH_TO_OUTPUT
 
-for filepath in "${files_to_cleanup[@]}"
-do
-	rm -vf $filepath
-done
+exit 0
