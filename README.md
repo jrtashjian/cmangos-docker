@@ -65,36 +65,13 @@ You are now running local server for the core variant you chose with the [latest
 ## Extracting client data
 
 Using the cmangos-extractors-variant container of your chosen core variant, extract the required client data like this:
+
 ```
-docker run -it \
+docker run \
 	-v "/path/to/WoW/client:/client" \
 	-v "/home/$USER/cmangos-docker/extracted-data:/maps" \
 	ghcr.io/jrtashjian/cmangos-extractors-classic
 ```
-
-Follow the prompts to start the extraction. Initially, you'll probably want to extract everything:
-
-1. Should all dataz (dbc, maps, vmaps and mmaps) be extracted? (y/n)  
-   `Y <ENTER>`
-2. How many CPU threads should be used for extracting mmaps? (leave empty to use all available threads)  
-   `<ENTER>`
-3. MMap Extraction Delay (leave blank for direct extraction)  
-   `<ENTER>`
-4. Would you like the extraction of maps to be high-resolution? (y/n)  
-   `Y <ENTER>`
-5. Would you like the extraction of vmaps to be high-resolution? (y/n)  
-   `Y <ENTER>`
-
-```
-Current Settings:
-Extract DBCs/maps: 1, Extract vmaps: 1, Extract mmaps: 1, Processes for mmaps: all
-maps extraction will be high-resolution
-vmaps extraction will be high-resolution
-
-Press (Enter) to continue, or interrupt with (CTRL+C)
-```
-
-Press Enter to start the extraction (this will take a while).
 
 ## Credits
 
