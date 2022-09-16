@@ -16,7 +16,7 @@ RUN mkdir -p /opt/cmangos/sql && cp /opt/src/cmangos/sql/base/realmd.sql /opt/cm
 
 RUN rm -rfv /opt/src
 
-FROM debian:stable
+FROM bitnami/minideb:latest
 LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker
 LABEL org.opencontainers.image.authors jrtashjian
 LABEL org.opencontainers.image.licenses GPL-2.0-only
