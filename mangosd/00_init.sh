@@ -46,8 +46,8 @@ REALM_PORT="${REALM_PORT:=8085}"
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
-    # Check if intialized
-    if [ ! -f "/opt/cmangos/etc/.intialized" ]; then
+    # Check if initialized
+    if [ ! -f "/opt/cmangos/etc/.initialized" ]; then
 		# Copy configs to volume
 		cp /opt/cmangos/configs/* /opt/cmangos/etc/
         mv -v /opt/cmangos/etc/ahbot.conf.dist /opt/cmangos/etc/ahbot.conf
@@ -95,7 +95,7 @@ if [ $? -eq 0 ]; then
         fi
 
         # Create .initialized file
-        touch /opt/cmangos/etc/.intialized
+        touch /opt/cmangos/etc/.initialized
     fi
 
     # Create or update server in realmlist.
