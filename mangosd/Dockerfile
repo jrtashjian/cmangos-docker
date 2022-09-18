@@ -1,13 +1,16 @@
 FROM ghcr.io/jrtashjian/cmangos-builder:latest as builder
 
 ARG CMANGOS_CORE=classic
+ARG BUILD_PLAYERBOT=ON
+ARG BUILD_AHBOT=ON
+ARG BUILD_METRICS=OFF
 
 RUN mkdir -p /opt/src && \
 	git clone --depth 1 https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos
 
 RUN mkdir -p /opt/src/cmangos/build && \
 	cd /opt/src/cmangos/build && \
-	cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_PLAYERBOT=ON -DBUILD_AHBOT=ON && \
+	cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_PLAYERBOT=${BUILD_PLAYERBOT} -DBUILD_AHBOT=${BUILD_AHBOT} -DBUILD_METRICS=${BUILD_METRICS} && \
 	make -j $(nproc) && make install
 
 # Copy config and sql scripts
