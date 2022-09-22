@@ -25,11 +25,13 @@ ARG CMANGOS_CORE
 ENV CMANGOS_CORE=$CMANGOS_CORE
 
 RUN apt update; \
-	apt install -y \
+	apt install -y --no-install-recommends \
 		mariadb-client \
 		libmariadb3 \
 		wget \
 		unzip \
+		php-cli \
+		php-gmp \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
@@ -41,6 +43,8 @@ VOLUME [ "/opt/cmangos/etc" ]
 COPY 00_init.sh /00_init.sh
 COPY wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /00_init.sh && chmod +x /wait-for-it.sh
+
+COPY account-create.php /account-create.php
 
 # Add Tini
 ENV TINI_VERSION v0.19.0

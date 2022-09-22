@@ -46,8 +46,41 @@ if [ $? -eq 0 ]; then
             mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /opt/cmangos/sql/realmd.sql
         fi
 
+        # Remove all default accounts
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "DELETE FROM account;"
+
         # Create .initialized file
         touch /opt/cmangos/etc/.initialized
+    fi
+
+    # Create or update initial accounts
+    case $CMANGOS_CORE in
+        tbc)
+        EXPANSION=1
+        ;;
+        wotlk)
+        EXPANSION=2
+        ;;
+        *)
+        EXPANSION=0
+        ;;
+    esac
+
+    if [ ! -z "$ACCOUNT_ADMIN_USER" ]; then
+        ACCOUNT_ADMIN_DATA=($(php -f /account-create.php $ACCOUNT_ADMIN_USER $ACCOUNT_ADMIN_PASS))
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -N -e "INSERT INTO account (username,gmlevel,v,s,expansion) VALUES ('${ACCOUNT_ADMIN_USER}',3,'${ACCOUNT_ADMIN_DATA[1]}','${ACCOUNT_ADMIN_DATA[0]}',${EXPANSION}) ON DUPLICATE KEY UPDATE gmlevel=3, v='${ACCOUNT_ADMIN_DATA[1]}', s='${ACCOUNT_ADMIN_DATA[0]}', expansion=${EXPANSION};"
+    fi
+    if [ ! -z "$ACCOUNT_GM_USER" ]; then
+        ACCOUNT_GM_DATA=($(php -f /account-create.php $ACCOUNT_GM_USER $ACCOUNT_GM_PASS))
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -N -e "INSERT INTO account (username,gmlevel,v,s,expansion) VALUES ('${ACCOUNT_GM_USER}',2,'${ACCOUNT_GM_DATA[1]}','${ACCOUNT_GM_DATA[0]}',${EXPANSION}) ON DUPLICATE KEY UPDATE gmlevel=2, v='${ACCOUNT_GM_DATA[1]}', s='${ACCOUNT_GM_DATA[0]}', expansion=${EXPANSION};"
+    fi
+    if [ ! -z "$ACCOUNT_MOD_USER" ]; then
+        ACCOUNT_MOD_DATA=($(php -f /account-create.php $ACCOUNT_MOD_USER $ACCOUNT_MOD_PASS))
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -N -e "INSERT INTO account (username,gmlevel,v,s,expansion) VALUES ('${ACCOUNT_MOD_USER}',1,'${ACCOUNT_MOD_DATA[1]}','${ACCOUNT_MOD_DATA[0]}',${EXPANSION}) ON DUPLICATE KEY UPDATE gmlevel=1, v='${ACCOUNT_MOD_DATA[1]}', s='${ACCOUNT_MOD_DATA[0]}', expansion=${EXPANSION};"
+    fi
+    if [ ! -z "$ACCOUNT_PLAYER_USER" ]; then
+        ACCOUNT_PLAYER_DATA=($(php -f /account-create.php $ACCOUNT_PLAYER_USER $ACCOUNT_PLAYER_PASS))
+        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -N -e "INSERT INTO account (username,gmlevel,v,s,expansion) VALUES ('${ACCOUNT_PLAYER_USER}',0,'${ACCOUNT_PLAYER_DATA[1]}','${ACCOUNT_PLAYER_DATA[0]}',${EXPANSION}) ON DUPLICATE KEY UPDATE gmlevel=0, v='${ACCOUNT_PLAYER_DATA[1]}', s='${ACCOUNT_PLAYER_DATA[0]}', expansion=${EXPANSION};"
     fi
 
 	# Run CMaNGOS
