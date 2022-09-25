@@ -165,11 +165,11 @@ if [ $? -eq 0 ]; then
 
             rm /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
         else
-            sql_file_exec "WORLD_DB_HOST" /opt/cmangos/sql/mangos.sql "Installing world database"
-            sql_file_exec "CHARACTERS_DB_HOST" /opt/cmangos/sql/characters.sql "Installing characters database"
-            sql_file_exec "LOGS_DB_HOST" /opt/cmangos/sql/logs.sql "Installing logs database"
+            sql_file_exec "WORLD_DB" /opt/cmangos/sql/mangos.sql "Installing world database"
+            sql_file_exec "CHARACTERS_DB" /opt/cmangos/sql/characters.sql "Installing characters database"
+            sql_file_exec "LOGS_DB" /opt/cmangos/sql/logs.sql "Installing logs database"
             # Add required data for an empty world
-            sql_file_exec "WORLD_DB_HOST" /opt/cmangos/sql/initial-tables.sql "Adding additional data for an empty world"
+            sql_file_exec "WORLD_DB" /opt/cmangos/sql/initial-tables.sql "Adding additional data for an empty world"
         fi
 
         # Create .initialized file
