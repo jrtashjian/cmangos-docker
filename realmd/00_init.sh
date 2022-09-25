@@ -18,6 +18,76 @@ LOGIN_DB_NAME="${LOGIN_DB_NAME:=login}"
 LOGIN_DB_ADMIN_USER="${LOGIN_DB_ADMIN_USER:=$DB_ADMIN_USER}"
 LOGIN_DB_ADMIN_PASS="${LOGIN_DB_ADMIN_PASS:=$DB_ADMIN_PASS}"
 
+# Execute SQL command with admin credentials.
+# sql_exec_admin "env_var_prefix" "sql" "message"
+function sql_exec_admin() {
+	sql_exec "$@" "admin"
+}
+
+# Execute SQL command.
+# sql_exec "env_var_prefix" "sql" "message" "admin"
+function sql_exec() {
+	if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
+
+	local DBHOST="$1_HOST"
+	local DBPORT="$1_PORT"
+	local DBNAME="$1_NAME"
+	local DBUSER="$1_USER"
+	local DBPASS="$1_PASS"
+
+	if [[ "$4" == "admin" ]]; then
+		local DBUSER="$1_ADMIN_USER"
+		local DBPASS="$1_ADMIN_PASS"
+	fi
+
+	export MYSQL_PWD="${!DBPASS}"
+
+    if [[ "$4" == "admin" ]]; then
+        MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -e "$2" 2>&1)
+    else
+        MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" -e "$2" 2>&1)
+    fi
+
+	if [[ $? != 0 ]]; then
+		if [ ! -z "$3" ]; then
+			echo "FAILED!"
+			echo ">>> $MYSQL_ERROR"
+		fi
+		return 1
+	else
+		if [ ! -z "$3" ]; then echo "SUCCESS"; fi
+	fi
+
+	return 0
+}
+
+# Execute SQL commands from file.
+# sql_file_exec "prefix" "sql_file" "message"
+function sql_file_exec() {
+    if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
+
+	local DBHOST="$1_HOST"
+	local DBPORT="$1_PORT"
+	local DBNAME="$1_NAME"
+	local DBUSER="$1_USER"
+	local DBPASS="$1_PASS"
+
+	export MYSQL_PWD="${!DBPASS}"
+    MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" < "$2" 2>&1)
+
+	if [[ $? != 0 ]]; then
+		if [ ! -z "$3" ]; then
+			echo "FAILED!"
+			echo ">>> $MYSQL_ERROR"
+		fi
+		return 1
+	else
+		if [ ! -z "$3" ]; then echo "SUCCESS"; fi
+	fi
+
+	return 0
+}
+
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
@@ -27,28 +97,32 @@ if [ $? -eq 0 ]; then
 		cp /opt/cmangos/configs/* /opt/cmangos/etc/
         mv -v /opt/cmangos/etc/realmd.conf.dist /opt/cmangos/etc/realmd.conf
 
-        # Configure DB Settings
-        sed -i 's/LoginDatabaseInfo.*/LoginDatabaseInfo = "'${LOGIN_DB_HOST}';'${LOGIN_DB_PORT}';'${LOGIN_DB_USER}';'${LOGIN_DB_PASS}';'${LOGIN_DB_NAME}'"/g' /opt/cmangos/etc/realmd.conf
+        sql_exec_admin "LOGIN_DB" \
+            "CREATE DATABASE ${LOGIN_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
+            "Create database ${LOGIN_DB_NAME}"
 
-        # Create DB
-        mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_ADMIN_USER -p$LOGIN_DB_ADMIN_PASS -e "CREATE DATABASE ${LOGIN_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
-        mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_ADMIN_USER -p$LOGIN_DB_ADMIN_PASS -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGIN_DB_NAME}.* TO ${LOGIN_DB_USER}@'%';"
+        sql_exec_admin "LOGIN_DB" \
+            "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGIN_DB_NAME}.* TO ${LOGIN_DB_USER}@'%';" \
+            "Grant all permissions to ${LOGIN_DB_USER} on the ${LOGIN_DB_NAME} database"
 
         # INSTALL_FULL_DB
         if [ "$INSTALL_FULL_DB" = TRUE ]; then
-            wget "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
+            wget -nv "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
             unzip ${CMANGOS_CORE}-all-db.zip
 
-            mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /${CMANGOS_CORE}realmd.sql
+            sql_file_exec "LOGIN_DB" /${CMANGOS_CORE}realmd.sql "Installing login database"
 
             rm /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
         else
-            mysql -h $LOGIN_DB_HOST -u $LOGIN_DB_USER -p$LOGIN_DB_PASS $LOGIN_DB_NAME < /opt/cmangos/sql/realmd.sql
+            sql_file_exec "LOGIN_DB" /opt/cmangos/sql/realmd.sql "Installing login database"
         fi
 
         # Create .initialized file
         touch /opt/cmangos/etc/.initialized
     fi
+
+    # Update realmd.conf
+    sed -i 's/LoginDatabaseInfo.*/LoginDatabaseInfo = "'${LOGIN_DB_HOST}';'${LOGIN_DB_PORT}';'${LOGIN_DB_USER}';'${LOGIN_DB_PASS}';'${LOGIN_DB_NAME}'"/g' /opt/cmangos/etc/realmd.conf
 
 	# Run CMaNGOS
 	cd /opt/cmangos/bin/
