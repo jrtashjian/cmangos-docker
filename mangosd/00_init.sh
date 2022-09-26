@@ -122,6 +122,17 @@ function copy_configs() {
 	find $1 -type f -path '*.dist' -exec bash -c 'FILE=$(basename ${0}); cp '$1'$FILE '$2'${FILE//.dist/}' {} \;
 }
 
+# update_config "env_prefix" "config_file_path"
+function update_config() {
+	CONF=($(compgen -A variable | grep "$1"))
+
+	for KEY in "${CONF[@]}"; do
+		CONF_KEY=${KEY//${1}/}
+		CONF_KEY=${CONF_KEY//_/.}
+		sed -i 's/^\('${CONF_KEY}'\).*/\1 \= "'${!KEY//\//\\/}'"/ig' $2
+	done
+}
+
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
@@ -185,22 +196,28 @@ if [ $? -eq 0 ]; then
         touch /opt/cmangos/etc/.initialized
     fi
 
-    # Update mangosd.conf
-    sed -i 's/LoginDatabaseInfo.*/LoginDatabaseInfo = "'${LOGIN_DB_HOST}';'${LOGIN_DB_PORT}';'${LOGIN_DB_USER}';'${LOGIN_DB_PASS}';'${LOGIN_DB_NAME}'"/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/WorldDatabaseInfo.*/WorldDatabaseInfo = "'${WORLD_DB_HOST}';'${WORLD_DB_PORT}';'${WORLD_DB_USER}';'${WORLD_DB_PASS}';'${WORLD_DB_NAME}'"/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/CharacterDatabaseInfo.*/CharacterDatabaseInfo = "'${CHARACTERS_DB_HOST}';'${CHARACTERS_DB_PORT}';'${CHARACTERS_DB_USER}';'${CHARACTERS_DB_PASS}';'${CHARACTERS_DB_NAME}'"/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/LogsDatabaseInfo.*/LogsDatabaseInfo = "'${LOGS_DB_HOST}';'${LOGS_DB_PORT}';'${LOGS_DB_USER}';'${LOGS_DB_PASS}';'${LOGS_DB_NAME}'"/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/LogsDir.*/LogsDir = "\/opt\/cmangos\/etc\/logs"/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/DataDir.*/DataDir = "\/opt\/cmangos-data"/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/Ra.Enable \= 0/Ra.Enable \= 1/g' /opt/cmangos/etc/mangosd.conf
-    sed -i 's/Console\.Enable \= 1/Console\.Enable \= 0/g' /opt/cmangos/etc/mangosd.conf
-
     # Create or update server in realmlist.
     sql_exec "LOGIN_DB" \
         "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}';" \
         "Updating realmlist with '${REALM_NAME}'"
 
-    sed -i 's/RealmID.*/RealmID \= '${REALM_ID}'/g' /opt/cmangos/etc/mangosd.conf
+    # Update mangosd.conf
+    MANGOSD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
+    MANGOSD_WORLDDATABASEINFO="${WORLD_DB_HOST};${WORLD_DB_PORT};${WORLD_DB_USER};${WORLD_DB_PASS};${WORLD_DB_NAME}"
+    MANGOSD_CHARACTERDATABASEINFO="${CHARACTERS_DB_HOST};${CHARACTERS_DB_PORT};${CHARACTERS_DB_USER};${CHARACTERS_DB_PASS};${CHARACTERS_DB_NAME}"
+    MANGOSD_LOGSDATABASEINFO="${LOGS_DB_HOST};${LOGS_DB_PORT};${LOGS_DB_USER};${LOGS_DB_PASS};${LOGS_DB_NAME}"
+    MANGOSD_LOGSDIR="/opt/cmangos/etc/logs"
+    MANGOSD_DATADIR="/opt/cmangos-data"
+    MANGOSD_RA_ENABLE=1
+    MANGOSD_CONSOLE_ENABLE=0
+    MANGOSD_REALMID=$REALM_ID
+
+    update_config MANGOSD_ /opt/cmangos/etc/mangosd.conf
+
+    # Update misc *.conf files
+    update_config AHBOT_ /opt/cmangos/etc/ahbot.conf
+    update_config ANTICHEAT_ /opt/cmangos/etc/anticheat.conf
+    update_config PLAYERBOT_ /opt/cmangos/etc/playerbot.conf
 
 	# Run CMaNGOS
 	cd /opt/cmangos/bin/
