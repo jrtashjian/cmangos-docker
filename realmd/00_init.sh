@@ -93,6 +93,17 @@ function copy_configs() {
 	find $1 -type f -path '*.dist' -exec bash -c 'FILE=$(basename ${0}); cp '$1'$FILE '$2'${FILE//.dist/}' {} \;
 }
 
+# update_config "env_prefix" "config_file_path"
+function update_config() {
+	CONF=($(compgen -A variable | grep "$1"))
+
+	for KEY in "${CONF[@]}"; do
+		CONF_KEY=${KEY//${1}/}
+		CONF_KEY=${CONF_KEY//_/.}
+		sed -i 's/^\('${CONF_KEY}'\).*/\1 \= "'${!KEY//\//\\/}'"/ig' $2
+	done
+}
+
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
