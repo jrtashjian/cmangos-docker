@@ -155,23 +155,31 @@ if [ $? -eq 0 ]; then
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGS_DB_NAME}.* TO ${LOGS_DB_USER}@'%';" \
             "Grant all permissions to ${LOGS_DB_USER} on the ${LOGS_DB_NAME} database"
 
-        # INSTALL_FULL_DB
+        # Import DB
+        WORLD_SQL=/opt/cmangos/sql/mangos.sql
+        CHARACTERS_SQL=/opt/cmangos/sql/characters.sql
+        LOGS_SQL=/opt/cmangos/sql/logs.sql
+
         if [ "$INSTALL_FULL_DB" = TRUE ]; then
             wget "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
             unzip ${CMANGOS_CORE}-all-db.zip
 
-            sql_file_exec "WORLD_DB" /${CMANGOS_CORE}mangos.sql "Installing world database"
-            sql_file_exec "CHARACTERS_DB" /${CMANGOS_CORE}characters.sql "Installing characters database"
-            sql_file_exec "LOGS_DB" /${CMANGOS_CORE}logs.sql "Installing logs database"
+            WORLD_SQL=/${CMANGOS_CORE}mangos.sql
+            CHARACTERS_SQL=/${CMANGOS_CORE}characters.sql
+            LOGS_SQL=/${CMANGOS_CORE}logs.sql
+        fi
 
-            rm /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
-        else
-            sql_file_exec "WORLD_DB" /opt/cmangos/sql/mangos.sql "Installing world database"
-            sql_file_exec "CHARACTERS_DB" /opt/cmangos/sql/characters.sql "Installing characters database"
-            sql_file_exec "LOGS_DB" /opt/cmangos/sql/logs.sql "Installing logs database"
-            # Add required data for an empty world
+        sql_file_exec "WORLD_DB" $WORLD_SQL "Installing world database"
+        sql_file_exec "CHARACTERS_DB" $CHARACTERS_SQL "Installing characters database"
+        sql_file_exec "LOGS_DB" $LOGS_SQL "Installing logs database"
+
+        # Add required data for an empty world
+        if [ ! "$INSTALL_FULL_DB" = TRUE ]; then
             sql_file_exec "WORLD_DB" /opt/cmangos/sql/initial-tables.sql "Adding additional data for an empty world"
         fi
+
+        # Cleanup
+        rm -f /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
 
         # Create .initialized file
         touch /opt/cmangos/etc/.initialized

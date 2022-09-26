@@ -109,17 +109,20 @@ if [ $? -eq 0 ]; then
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGIN_DB_NAME}.* TO ${LOGIN_DB_USER}@'%';" \
             "Grant all permissions to ${LOGIN_DB_USER} on the ${LOGIN_DB_NAME} database"
 
-        # INSTALL_FULL_DB
+        # Import DB
+        LOGIN_SQL=/opt/cmangos/sql/realmd.sql
+
         if [ "$INSTALL_FULL_DB" = TRUE ]; then
-            wget -nv "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
+            wget "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
             unzip ${CMANGOS_CORE}-all-db.zip
 
-            sql_file_exec "LOGIN_DB" /${CMANGOS_CORE}realmd.sql "Installing login database"
-
-            rm /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
-        else
-            sql_file_exec "LOGIN_DB" /opt/cmangos/sql/realmd.sql "Installing login database"
+            LOGIN_SQL=/${CMANGOS_CORE}realmd.sql
         fi
+
+        sql_file_exec "LOGIN_DB" $LOGIN_SQL "Installing login database"
+
+        # Cleanup
+        rm -f /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
 
         # Create .initialized file
         touch /opt/cmangos/etc/.initialized
