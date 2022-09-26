@@ -88,14 +88,18 @@ function sql_file_exec() {
 	return 0
 }
 
+# copy_configs "input_path" "output_path"
+function copy_configs() {
+	find $1 -type f -path '*.dist' -exec bash -c 'FILE=$(basename ${0}); cp '$1'$FILE '$2'${FILE//.dist/}' {} \;
+}
+
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
     # Check if initialized
     if [ ! -f "/opt/cmangos/etc/.initialized" ]; then
 		# Copy configs to volume
-		cp /opt/cmangos/configs/* /opt/cmangos/etc/
-        mv -v /opt/cmangos/etc/realmd.conf.dist /opt/cmangos/etc/realmd.conf
+		copy_configs /opt/cmangos/configs/ /opt/cmangos/etc/
 
         sql_exec_admin "LOGIN_DB" \
             "CREATE DATABASE ${LOGIN_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
