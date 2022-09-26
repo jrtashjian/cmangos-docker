@@ -188,14 +188,9 @@ if [ $? -eq 0 ]; then
     sed -i 's/Console\.Enable \= 1/Console\.Enable \= 0/g' /opt/cmangos/etc/mangosd.conf
 
     # Create or update server in realmlist.
-    REALM_FOUND=$(mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "SELECT 1 FROM realmlist WHERE id=${REALM_ID};" 2>&1)
-    if [ -z $REALM_FOUND ]; then
-        echo "NOT EXISTS"
-        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}',${REALM_PORT});"
-    else
-        echo "EXISTS"
-        mysql -h $LOGIN_DB_HOST -P $LOGIN_DB_PORT -u $LOGIN_DB_USER -p$LOGIN_DB_PASS -D "$LOGIN_DB_NAME" -s -N -e "UPDATE realmlist SET name='${REALM_NAME}', address='${REALM_ADDRESS}', port=${REALM_PORT} WHERE id=${REALM_ID};"
-    fi
+    sql_exec "LOGIN_DB" \
+        "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}';" \
+        "Updating realmlist with '${REALM_NAME}'"
 
     sed -i 's/RealmID.*/RealmID \= '${REALM_ID}'/g' /opt/cmangos/etc/mangosd.conf
 
