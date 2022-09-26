@@ -140,7 +140,9 @@ if [ $? -eq 0 ]; then
     fi
 
     # Update realmd.conf
-    sed -i 's/LoginDatabaseInfo.*/LoginDatabaseInfo = "'${LOGIN_DB_HOST}';'${LOGIN_DB_PORT}';'${LOGIN_DB_USER}';'${LOGIN_DB_PASS}';'${LOGIN_DB_NAME}'"/g' /opt/cmangos/etc/realmd.conf
+	REALMD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
+	REALMD_LOGSDIR="/opt/cmangos/etc/logs"
+	update_config REALMD_ /opt/cmangos/etc/realmd.conf
 
 	# Run CMaNGOS
 	cd /opt/cmangos/bin/
