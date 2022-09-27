@@ -5,6 +5,10 @@ on:
     - cron: '0 0 * * 0' # At 00:00 on Sunday.
   push:
     branches: [ "master" ]
+    paths:
+      - 'extractors/**'
+      - 'mangosd/**'
+      - 'realmd/**'
 
 env:
   REGISTRY: ghcr.io
@@ -66,6 +70,7 @@ jobs:
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
           context: ./${{ matrix.image }}
+          build-args: CMANGOS_CORE=${{ matrix.variant }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
