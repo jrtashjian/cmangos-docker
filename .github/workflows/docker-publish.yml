@@ -5,6 +5,10 @@ on:
     - cron: '0 0 * * 0' # At 00:00 on Sunday.
   push:
     branches: [ "master" ]
+    paths:
+      - 'extractors/**'
+      - 'mangosd/**'
+      - 'realmd/**'
 
 env:
   REGISTRY: ghcr.io
