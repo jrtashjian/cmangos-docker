@@ -1,4 +1,4 @@
-FROM ghcr.io/jrtashjian/cmangos-builder:latest as builder
+FROM ghcr.io/jrtashjian/cmangos-docker/builder-base:latest as builder
 
 ARG CMANGOS_CORE=classic
 ARG BUILD_PLAYERBOT=ON
@@ -23,7 +23,9 @@ RUN mkdir -p /opt/cmangos/sql && \
 RUN rm -rfv /opt/src
 
 FROM bitnami/minideb:latest
-LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker
+LABEL org.opencontainers.image.title mangosd-${CMANGOS_CORE}
+LABEL org.opencontainers.image.description Containerized CMaNGOS Game Server
+LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker/mangosd
 LABEL org.opencontainers.image.authors jrtashjian
 LABEL org.opencontainers.image.licenses GPL-2.0-only
 

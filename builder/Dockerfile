@@ -1,5 +1,7 @@
 FROM buildpack-deps:stable
-LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker
+LABEL org.opencontainers.image.title builder-base
+LABEL org.opencontainers.image.description Base image for building CMaNGOS
+LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker/builder
 LABEL org.opencontainers.image.authors jrtashjian
 LABEL org.opencontainers.image.licenses GPL-2.0-only
 
