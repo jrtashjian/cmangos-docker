@@ -13,7 +13,7 @@ services:
       - "./data/database:/var/lib/mysql"
 
   realmd:
-    image: ghcr.io/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:master
     depends_on:
       - database
     env_file: .env
@@ -24,7 +24,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
 
   mangosd_one:
-    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:master
     depends_on:
       - database
     env_file: .env
@@ -44,7 +44,7 @@ services:
       - "./extracted-data:/opt/cmangos-data:ro"
 
   mangosd_two:
-    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:master
     depends_on:
       - database
     env_file: .env

@@ -18,7 +18,7 @@ services:
       dockerfile: Dockerfile
       args:
         CMANGOS_CORE: ${CORE_VARIANT}
-    image: ghcr.io/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:master
     depends_on:
       - database
     environment:
@@ -39,7 +39,7 @@ services:
       dockerfile: Dockerfile
       args:
         CMANGOS_CORE: ${CORE_VARIANT}
-    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:master
     depends_on:
       - database
       - realmd
