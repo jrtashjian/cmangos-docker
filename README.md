@@ -70,7 +70,7 @@ Using the cmangos-extractors-variant container of your chosen core variant, extr
 docker run \
 	-v "/path/to/WoW/client:/client" \
 	-v "/home/$USER/cmangos-docker/extracted-data:/maps" \
-	ghcr.io/jrtashjian/cmangos-extractors-classic
+	ghcr.io/jrtashjian/cmangos-docker/extractors-classic
 ```
 
 ## Credits
