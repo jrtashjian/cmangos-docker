@@ -1,6 +1,10 @@
 name: Build and Release Container Images
 
-on: push
+on:
+  schedule:
+    - cron: '0 0 * * 0' # At 00:00 on Sunday.
+  push:
+    branches: [ "master" ]
 
 env:
   REGISTRY: ghcr.io
@@ -18,10 +22,8 @@ jobs:
 
     strategy:
       matrix:
-        # variant: [ classic, tbc, wotlk ]
-        # image: [ extractors, realmd, mangosd ]
-        variant: [ classic ]
-        image: [ realmd ]
+        variant: [ classic, tbc, wotlk ]
+        image: [ extractors, realmd, mangosd ]
 
     steps:
       - name: Checkout repository
