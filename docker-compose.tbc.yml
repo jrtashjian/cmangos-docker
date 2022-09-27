@@ -13,7 +13,7 @@ services:
       - "./data/database:/var/lib/mysql"
 
   realmd:
-    image: ghcr.io/jrtashjian/cmangos-realmd-tbc:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/realmd-tbc:latest
     depends_on:
       - database
     environment:
@@ -30,7 +30,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
 
   mangosd:
-    image: ghcr.io/jrtashjian/cmangos-mangosd-tbc:latest
+    image: ghcr.io/jrtashjian/cmangos-docker/mangosd-tbc:latest
     depends_on:
       - database
     environment:
