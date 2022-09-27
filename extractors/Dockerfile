@@ -13,7 +13,9 @@ RUN mkdir -p /opt/src/cmangos/build && \
 RUN rm -rfv /opt/src
 
 FROM bitnami/minideb:latest
-LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker
+LABEL org.opencontainers.image.title cmangos-extractors-${CMANGOS_CORE}
+LABEL org.opencontainers.image.description Containerized CMaNGOS Extractors
+LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker/extractors
 LABEL org.opencontainers.image.authors jrtashjian
 LABEL org.opencontainers.image.licenses GPL-2.0-only
 
