@@ -1,6 +1,7 @@
 name: Build and Release Container Images
 
 on:
+  workflow_dispatch: # Allow manual trigger.
   schedule:
     - cron: '0 0 * * 0' # At 00:00 on Sunday.
   push:
