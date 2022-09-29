@@ -1,20 +1,20 @@
 name: Build and Release Container Images
 
-on:
-  workflow_dispatch: # Allow manual trigger.
-  schedule:
-    - cron: '0 0 * * 0' # At 00:00 on Sunday.
-  push:
-    branches: [ "master" ]
-    paths:
-      - 'extractors/**'
-      - 'mangosd/**'
-      - 'realmd/**'
+on: push
+  # workflow_dispatch: # Allow manual trigger.
+  # schedule:
+  #   - cron: '0 0 * * 0' # At 00:00 on Sunday.
+  # push:
+  #   branches: [ "master" ]
+  #   paths:
+  #     - 'extractors/**'
+  #     - 'mangosd/**'
+  #     - 'realmd/**'
 
 env:
   REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
+  # # github.repository as <account>/<repo>
+  # IMAGE_NAME: ${{ github.repository }}
 
 jobs:
 
@@ -27,8 +27,8 @@ jobs:
 
     strategy:
       matrix:
-        variant: [ classic, tbc, wotlk ]
-        image: [ extractors, realmd, mangosd ]
+        variant: [ classic ] # [ classic, tbc, wotlk ]
+        image: [ realmd ] # [ extractors, realmd, mangosd ]
 
     steps:
       - name: Checkout repository
@@ -62,7 +62,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image }}-${{ matrix.variant }}
+          images: |
+            jrtashjian/cmangos-${{ matrix.image }}-${{ matrix.variant }}
+            ${{ env.REGISTRY }}/jrtashjian/cmangos-${{ matrix.image }}-${{ matrix.variant }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
