@@ -1,4 +1,4 @@
-FROM ghcr.io/jrtashjian/cmangos-docker/builder-base:latest as builder
+FROM ghcr.io/jrtashjian/cmangos-builder-base:latest as builder
 
 ARG CMANGOS_CORE=classic
 
