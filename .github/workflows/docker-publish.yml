@@ -18,10 +18,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
+    # permissions:
+    #   contents: read
+    #   packages: write
+    #   id-token: write
 
     strategy:
       matrix:
@@ -71,7 +71,7 @@ jobs:
           context: ./${{ matrix.image }}
           build-args: CMANGOS_CORE=${{ matrix.variant }}
           push: true # ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/cmangos-${{ matrix.image }}-${{ matrix.variant }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/cmangos-${{ matrix.image }}-${{ matrix.variant }}:latest
           # tags: ${{ steps.meta.outputs.tags }}
           # labels: ${{ steps.meta.outputs.labels }}
 
