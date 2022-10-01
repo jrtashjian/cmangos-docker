@@ -20,6 +20,7 @@ jobs:
       core: wotlk
 
   build_classic_core:
+    name: Build Classic Core - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
     runs-on: ubuntu-latest
     needs: get_latest_cmangos_classic_hash
 
@@ -32,6 +33,7 @@ jobs:
         run: echo "Placeholder classic.${{ matrix.image }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}"
 
   build_tbc_core:
+    name: Build TBC Core - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
     runs-on: ubuntu-latest
     needs: get_latest_cmangos_tbc_hash
 
@@ -44,6 +46,7 @@ jobs:
         run: echo "Placeholder tbc.${{ matrix.image }} - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}"
 
   build_wotlk_core:
+    name: Build WotLK Core - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
     runs-on: ubuntu-latest
     needs: get_latest_cmangos_wotlk_hash
 
