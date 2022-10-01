@@ -1,9 +1,11 @@
 FROM ghcr.io/jrtashjian/cmangos-builder-base:latest as builder
 
 ARG CMANGOS_CORE=classic
+ARG CORE_COMMIT_HASH=HEAD
 
 RUN mkdir -p /opt/src && \
-	git clone --depth 1 https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos
+	git clone https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos && \
+	if [ "$CORE_COMMIT_HASH" != "HEAD" ]; then cd /opt/src/cmangos; git checkout ${CORE_COMMIT_HASH}; fi
 
 RUN mkdir -p /opt/src/cmangos/build && \
 	cd /opt/src/cmangos/build && \
