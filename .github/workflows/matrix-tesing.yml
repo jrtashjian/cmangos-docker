@@ -11,9 +11,12 @@ jobs:
       matrix:
         variant: [ classic, tbc, wotlk ]
 
+    outputs:
+      core_hash: ${{ steps.get_hash.outputs.hash }}
+
     steps:
-      - name: Retrieve commit hash from cmangos repo
-        run: git ls-remote https://github.com/cmangos/mangos-${{ matrix.variant }}.git refs/tags/latest | awk '{print $1}'
+      - id: get_hash
+        run: git ls-remote https://github.com/cmangos/mangos-${{ matrix.variant }}.git refs/tags/latest | awk '{print "::set-output name=hash::"$1}'
 
   build_core:
     runs-on: ubuntu-latest
@@ -21,8 +24,9 @@ jobs:
 
     strategy:
       matrix:
+        variant: [ classic, tbc, wotlk ]
         image: [ extractors, realmd, mangosd ]
 
     steps:
       - name: Placeholder
-        run: echo "Placeholder ${{ matrix.image }}"
+        run: echo "Placeholder ${{ matrix.variant }}.${{ matrix.image }} - ${{ needs.get_latest_cmangos_hash.outputs.core_hash }}"
