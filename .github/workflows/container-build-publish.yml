@@ -1,18 +1,22 @@
-name: Build and Release Container Images
+name: Build and publish container images
 
 on:
-  workflow_dispatch: # Allow manual trigger.
-  schedule:
-    - cron: '0 0 * * 0' # At 00:00 on Sunday.
-  push:
-    branches: [ "master" ]
-    paths:
-      - 'extractors/**'
-      - 'mangosd/**'
-      - 'realmd/**'
+  workflow_call:
 
-env:
-  REGISTRY: ghcr.io
+    inputs:
+      core:
+        description: CMaNGOS Core Variant
+        required: true
+        type: string
+      image:
+        description: Container image to build
+        required: true
+        type: string
+      core_hash:
+        description: The commit hash
+        required: false
+        type: string
+        default: HEAD
 
 jobs:
 
@@ -22,11 +26,6 @@ jobs:
       contents: read
       packages: write
       id-token: write
-
-    strategy:
-      matrix:
-        variant: [ classic, tbc, wotlk ]
-        image: [ extractors, realmd, mangosd ]
 
     steps:
       - name: Checkout repository
@@ -46,11 +45,11 @@ jobs:
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into registry ghcr.io
         if: github.event_name != 'pull_request'
         uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -60,7 +59,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/cmangos-${{ matrix.image }}-${{ matrix.variant }}
+          images: ghcr.io/${{ github.repository_owner }}/cmangos-${{ inputs.image }}-${{ inputs.core }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
@@ -68,11 +67,17 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
-          context: ./${{ matrix.image }}
-          build-args: CMANGOS_CORE=${{ matrix.variant }}
+          context: ./${{ inputs.image }}
+          build-args: |
+            CMANGOS_CORE=${{ inputs.core }}
+            CORE_COMMIT_HASH=${{ inputs.core_hash }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            type=raw,value=latest,enable={{is_default_branch}}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker

@@ -1,0 +1,61 @@
+name: Build and Release Container Images
+
+on:
+  workflow_dispatch: # Allow manual trigger.
+  schedule:
+    - cron: '0 0 * * 0' # At 00:00 on Sunday.
+  push:
+    branches: [ "master" ]
+
+jobs:
+
+  get_latest_cmangos_classic_hash:
+    uses: ./.github/workflows/get-cmangos-hash.yml
+    with:
+      core: classic
+
+  get_latest_cmangos_tbc_hash:
+    uses: ./.github/workflows/get-cmangos-hash.yml
+    with:
+      core: tbc
+
+  get_latest_cmangos_wotlk_hash:
+    uses: ./.github/workflows/get-cmangos-hash.yml
+    with:
+      core: wotlk
+
+  build_classic_core:
+    name: Build Classic ${{ matrix.image }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+    needs: get_latest_cmangos_classic_hash
+    strategy:
+      matrix:
+        image: [ extractors, realmd, mangosd ]
+    uses: ./.github/workflows/container-build-publish.yml
+    with:
+      core: classic
+      image: ${{ matrix.image }}
+      core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+
+  build_tbc_core:
+    name: Build TBC ${{ matrix.image }} - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+    needs: get_latest_cmangos_tbc_hash
+    strategy:
+      matrix:
+        image: [ extractors, realmd, mangosd ]
+    uses: ./.github/workflows/container-build-publish.yml
+    with:
+      core: tbc
+      image: ${{ matrix.image }}
+      core_hash: ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+
+  build_wotlk_core:
+    name: Build WotLK ${{ matrix.image }} - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
+    needs: get_latest_cmangos_wotlk_hash
+    strategy:
+      matrix:
+        image: [ extractors, realmd, mangosd ]
+    uses: ./.github/workflows/container-build-publish.yml
+    with:
+      core: wotlk
+      image: ${{ matrix.image }}
+      core_hash: ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
