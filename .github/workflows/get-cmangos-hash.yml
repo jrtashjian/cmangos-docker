@@ -1,0 +1,29 @@
+name: Get CMaNGOS hash
+
+on:
+  workflow_call:
+
+    inputs:
+      ref:
+        description: Repository ref
+        required: false
+        type: string
+        default: refs/tags/latest
+      core:
+        description: CMaNGOS Core Variant
+        required: true
+        type: string
+
+    outputs:
+      core_hash:
+        description: The commit hash
+        value: ${{ jobs.get_hash.outputs.hash }}
+
+jobs:
+  get_hash:
+    runs-on: ubuntu-latest
+    outputs:
+      hash: ${{ steps.get_hash.outputs.hash }}
+    steps:
+      - id: get_hash
+        run: git ls-remote https://github.com/cmangos/mangos-${{ inputs.core }}.git ${{ inputs.ref }} | awk '{print "::set-output name=hash::"$1}'

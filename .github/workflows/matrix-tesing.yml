@@ -5,28 +5,19 @@ on: push
 jobs:
 
   get_latest_cmangos_classic_hash:
-    runs-on: ubuntu-latest
-    outputs:
-      core_hash: ${{ steps.get_hash.outputs.hash }}
-    steps:
-      - id: get_hash
-        run: git ls-remote https://github.com/cmangos/mangos-classic.git refs/tags/latest | awk '{print "::set-output name=hash::"$1}'
+    uses: ./.github/workflows/get-cmangos-hash.yml
+    with:
+      core: classic
 
   get_latest_cmangos_tbc_hash:
-    runs-on: ubuntu-latest
-    outputs:
-      core_hash: ${{ steps.get_hash.outputs.hash }}
-    steps:
-      - id: get_hash
-        run: git ls-remote https://github.com/cmangos/mangos-tbc.git refs/tags/latest | awk '{print "::set-output name=hash::"$1}'
+    uses: ./.github/workflows/get-cmangos-hash.yml
+    with:
+      core: tbc
 
   get_latest_cmangos_wotlk_hash:
-    runs-on: ubuntu-latest
-    outputs:
-      core_hash: ${{ steps.get_hash.outputs.hash }}
-    steps:
-      - id: get_hash
-        run: git ls-remote https://github.com/cmangos/mangos-wotlk.git refs/tags/latest | awk '{print "::set-output name=hash::"$1}'
+    uses: ./.github/workflows/get-cmangos-hash.yml
+    with:
+      core: wotlk
 
   build_classic_core:
     runs-on: ubuntu-latest
