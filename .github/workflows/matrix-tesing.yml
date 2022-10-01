@@ -1,0 +1,28 @@
+name: Matrix testing
+
+on: push
+
+jobs:
+
+  get_latest_cmangos_hash:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        variant: [ classic, tbc, wotlk ]
+
+    steps:
+      - name: Retrieve commit hash from cmangos repo
+        run: git ls-remote https://github.com/cmangos/mangos-${{ matrix.variant }}.git refs/tags/latest | awk '{print $1}'
+
+  build_core:
+    runs-on: ubuntu-latest
+    needs: [ get_latest_cmangos_hash ]
+
+    strategy:
+      matrix:
+        image: [ extractors, realmd, mangosd ]
+
+    steps:
+      - name: Placeholder
+        run: echo "Placeholder ${{ matrix.image }}"
