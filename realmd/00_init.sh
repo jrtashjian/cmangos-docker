@@ -144,6 +144,9 @@ if [ $? -eq 0 ]; then
 	REALMD_LOGSDIR="/opt/cmangos/etc/logs"
 	update_config REALMD_ /opt/cmangos/etc/realmd.conf
 
+	# Ensure LogsDir exists
+	mkdir -p $REALMD_LOGSDIR
+
 	# Run CMaNGOS
 	cd /opt/cmangos/bin/
 	./realmd

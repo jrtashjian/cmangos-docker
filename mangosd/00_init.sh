@@ -219,6 +219,9 @@ if [ $? -eq 0 ]; then
     update_config ANTICHEAT_ /opt/cmangos/etc/anticheat.conf
     update_config PLAYERBOT_ /opt/cmangos/etc/playerbot.conf
 
+    # Ensure LogsDir exists
+    mkdir -p $MANGOSD_LOGSDIR
+
 	# Run CMaNGOS
 	cd /opt/cmangos/bin/
 	./mangosd
