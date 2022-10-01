@@ -1,4 +1,4 @@
-name: Matrix testing
+name: Build and Release Container Images
 
 on:
   workflow_dispatch: # Allow manual trigger.
