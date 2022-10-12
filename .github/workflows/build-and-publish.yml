@@ -1,11 +1,11 @@
 name: Build and Release Container Images
 
-on:
-  workflow_dispatch: # Allow manual trigger.
-  schedule:
-    - cron: '0 7 * * *' # Every day at 7am UTC.
-  push:
-    branches: [ "master" ]
+on: push
+  # workflow_dispatch: # Allow manual trigger.
+  # schedule:
+  #   - cron: '0 7 * * *' # Every day at 7am UTC.
+  # push:
+  #   branches: [ "master" ]
 
 jobs:
 
@@ -14,48 +14,84 @@ jobs:
     with:
       core: classic
 
-  get_latest_cmangos_tbc_hash:
-    uses: ./.github/workflows/get-cmangos-hash.yml
-    with:
-      core: tbc
+  # get_latest_cmangos_tbc_hash:
+  #   uses: ./.github/workflows/get-cmangos-hash.yml
+  #   with:
+  #     core: tbc
 
-  get_latest_cmangos_wotlk_hash:
-    uses: ./.github/workflows/get-cmangos-hash.yml
-    with:
-      core: wotlk
+  # get_latest_cmangos_wotlk_hash:
+  #   uses: ./.github/workflows/get-cmangos-hash.yml
+  #   with:
+  #     core: wotlk
 
-  build_classic_core:
+  build_classic_realmd:
     name: Build Classic ${{ matrix.image }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
     needs: get_latest_cmangos_classic_hash
     strategy:
       matrix:
-        image: [ extractors, realmd, mangosd ]
-    uses: ./.github/workflows/container-build-publish.yml
-    with:
-      core: classic
-      image: ${{ matrix.image }}
-      core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+        image: [ extractors, realmd ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: DEBUG
+        run: echo "docker build cmangos-${{ matrix.image }}-classic"
+    # uses: ./.github/workflows/container-build-publish.yml
+    # with:
+    #   core: classic
+    #   image: ${{ matrix.image }}
+    #   core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
 
-  build_tbc_core:
-    name: Build TBC ${{ matrix.image }} - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
-    needs: get_latest_cmangos_tbc_hash
+  build_classic_mangosd:
+    name: Build Classic ${{ matrix.image }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+    needs: get_latest_cmangos_classic_hash
     strategy:
       matrix:
-        image: [ extractors, realmd, mangosd ]
-    uses: ./.github/workflows/container-build-publish.yml
-    with:
-      core: tbc
-      image: ${{ matrix.image }}
-      core_hash: ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+        include:
+          - build_args: ""
+            image_tag: "latest"
 
-  build_wotlk_core:
-    name: Build WotLK ${{ matrix.image }} - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
-    needs: get_latest_cmangos_wotlk_hash
-    strategy:
-      matrix:
-        image: [ extractors, realmd, mangosd ]
-    uses: ./.github/workflows/container-build-publish.yml
-    with:
-      core: wotlk
-      image: ${{ matrix.image }}
-      core_hash: ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
+          - build_args: |
+              BUILD_PLAYERBOT=ON
+              BUILD_AHBOT=ON
+            image_tag: "with-playerbot-ahbot"
+
+          - build_args: BUILD_PLAYERBOT=ON
+            image_tag: "with-playerbot"
+
+          - build_args: BUILD_AHBOT=ON
+            image_tag: "with-ahbot"
+    runs-on: ubuntu-latest
+    steps:
+      - name: DEBUG
+        run: echo "docker build cmangos-mangosd-classic:${{ matrix.image_tag }} \n${{ matrix.build_args }}"
+
+  # build_tbc_realmd:
+  #   name: Build TBC ${{ matrix.image }} - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+  #   needs: get_latest_cmangos_tbc_hash
+  #   strategy:
+  #     matrix:
+  #       image: [ extractors, realmd ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: DEBUG
+  #       run: echo "docker build cmangos-${{ matrix.image }}-tbc"
+  #   # uses: ./.github/workflows/container-build-publish.yml
+  #   # with:
+  #   #   core: tbc
+  #   #   image: ${{ matrix.image }}
+  #   #   core_hash: ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+
+  # build_wotlk_realmd:
+  #   name: Build WotLK ${{ matrix.image }} - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
+  #   needs: get_latest_cmangos_wotlk_hash
+  #   strategy:
+  #     matrix:
+  #       image: [ extractors, realmd ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: DEBUG
+  #       run: echo "docker build cmangos-${{ matrix.image }}-wotlk"
+  #   # uses: ./.github/workflows/container-build-publish.yml
+  #   # with:
+  #   #   core: wotlk
+  #   #   image: ${{ matrix.image }}
+    #   core_hash: ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
