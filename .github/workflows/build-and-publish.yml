@@ -1,11 +1,11 @@
 name: Build and Release Container Images
 
-on: push
-  # workflow_dispatch: # Allow manual trigger.
-  # schedule:
-  #   - cron: '0 7 * * *' # Every day at 7am UTC.
-  # push:
-  #   branches: [ "master" ]
+on:
+  workflow_dispatch: # Allow manual trigger.
+  schedule:
+    - cron: '0 7 * * *' # Every day at 7am UTC.
+  push:
+    branches: [ "master" ]
 
 jobs:
 
