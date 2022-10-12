@@ -24,41 +24,35 @@ jobs:
   #   with:
   #     core: wotlk
 
-  build_classic_realmd:
-    name: Build Classic ${{ matrix.image }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
-    needs: get_latest_cmangos_classic_hash
-    strategy:
-      matrix:
-        image: [ extractors, realmd ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: DEBUG
-        run: echo "docker build cmangos-${{ matrix.image }}-classic"
-    # uses: ./.github/workflows/container-build-publish.yml
-    # with:
-    #   core: classic
-    #   image: ${{ matrix.image }}
-    #   core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
-
-  build_classic_mangosd:
-    name: Build Classic ${{ matrix.image }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+  build_classic:
+    name: Build Classic ${{ matrix.image }}:${{ matrix.image_tag }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
     needs: get_latest_cmangos_classic_hash
     strategy:
       matrix:
         include:
-          # - build_args: ""
-          #   image_tag: "latest"
+          - image: extractors
+            image_tag: latest
 
-          - build_args: |
+          - image: realmd
+            image_tag: latest
+
+          - image: mangosd
+            image_tag: latest
+
+          - image: mangosd
+            image_tag: "with-playerbot-ahbot"
+            build_args: |
               BUILD_PLAYERBOT=ON
               BUILD_AHBOT=ON
-            image_tag: "with-playerbot-ahbot"
 
-          # - build_args: BUILD_PLAYERBOT=ON
-          #   image_tag: "with-playerbot"
+          - image: mangosd
+            image_tag: "with-playerbot"
+            build_args: BUILD_PLAYERBOT=ON
 
-          # - build_args: BUILD_AHBOT=ON
-          #   image_tag: "with-ahbot"
+          - image: mangosd
+            image_tag: "with-ahbot"
+            build_args: BUILD_AHBOT=ON
+
     uses: ./.github/workflows/container-build-publish.yml
     with:
       core: classic
@@ -66,39 +60,3 @@ jobs:
       image_tag: ${{ matrix.image_tag }}
       build_args: ${{ matrix.build_args }}
       core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
-    # runs-on: ubuntu-latest
-    # steps:
-    #   - name: DEBUG
-    #     run: echo "docker build cmangos-mangosd-classic:${{ matrix.image_tag }} ${{ matrix.build_args }}"
-
-  # build_tbc_realmd:
-  #   name: Build TBC ${{ matrix.image }} - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
-  #   needs: get_latest_cmangos_tbc_hash
-  #   strategy:
-  #     matrix:
-  #       image: [ extractors, realmd ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: DEBUG
-  #       run: echo "docker build cmangos-${{ matrix.image }}-tbc"
-  #   # uses: ./.github/workflows/container-build-publish.yml
-  #   # with:
-  #   #   core: tbc
-  #   #   image: ${{ matrix.image }}
-  #   #   core_hash: ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
-
-  # build_wotlk_realmd:
-  #   name: Build WotLK ${{ matrix.image }} - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
-  #   needs: get_latest_cmangos_wotlk_hash
-  #   strategy:
-  #     matrix:
-  #       image: [ extractors, realmd ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: DEBUG
-  #       run: echo "docker build cmangos-${{ matrix.image }}-wotlk"
-  #   # uses: ./.github/workflows/container-build-publish.yml
-  #   # with:
-  #   #   core: wotlk
-  #   #   image: ${{ matrix.image }}
-    #   core_hash: ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
