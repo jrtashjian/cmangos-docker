@@ -2,8 +2,8 @@ FROM ghcr.io/jrtashjian/cmangos-builder-base:latest as builder
 
 ARG CMANGOS_CORE=classic
 ARG CORE_COMMIT_HASH=HEAD
-ARG BUILD_PLAYERBOT=ON
-ARG BUILD_AHBOT=ON
+ARG BUILD_PLAYERBOT=OFF
+ARG BUILD_AHBOT=OFF
 ARG BUILD_METRICS=OFF
 
 RUN mkdir -p /opt/src && \
