@@ -90,20 +90,6 @@ jobs:
           - image: mangosd
             image_tag: latest
 
-          - image: mangosd
-            image_tag: "with-playerbot-ahbot"
-            build_args: |
-              BUILD_PLAYERBOT=ON
-              BUILD_AHBOT=ON
-
-          - image: mangosd
-            image_tag: "with-playerbot"
-            build_args: BUILD_PLAYERBOT=ON
-
-          - image: mangosd
-            image_tag: "with-ahbot"
-            build_args: BUILD_AHBOT=ON
-
     uses: ./.github/workflows/container-build-publish.yml
     with:
       core: tbc
@@ -154,20 +140,6 @@ jobs:
 
           - image: mangosd
             image_tag: latest
-
-          - image: mangosd
-            image_tag: "with-playerbot-ahbot"
-            build_args: |
-              BUILD_PLAYERBOT=ON
-              BUILD_AHBOT=ON
-
-          - image: mangosd
-            image_tag: "with-playerbot"
-            build_args: BUILD_PLAYERBOT=ON
-
-          - image: mangosd
-            image_tag: "with-ahbot"
-            build_args: BUILD_AHBOT=ON
 
     uses: ./.github/workflows/container-build-publish.yml
     with:
