@@ -62,7 +62,7 @@ jobs:
     uses: ./.github/workflows/container-build-publish.yml
     with:
       core: classic
-      image: ${{ matrix.image }}
+      image: mangosd
       image_tag: ${{ matrix.image_tag }}
       build_args: ${{ matrix.build_args }}
       core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
