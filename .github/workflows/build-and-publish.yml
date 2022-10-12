@@ -39,6 +39,20 @@ jobs:
           - image: mangosd
             image_tag: latest
 
+    uses: ./.github/workflows/container-build-publish.yml
+    with:
+      core: classic
+      image: ${{ matrix.image }}
+      image_tag: ${{ matrix.image_tag }}
+      build_args: ${{ matrix.build_args }}
+      core_hash: ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+
+  build_classic_variants:
+    name: Build Classic ${{ matrix.image }}:${{ matrix.image_tag }} - ${{ needs.get_latest_cmangos_classic_hash.outputs.core_hash }}
+    needs: [ get_latest_cmangos_classic_hash, build_classic ]
+    strategy:
+      matrix:
+        include:
           - image: mangosd
             image_tag: "with-playerbot-ahbot"
             build_args: |
@@ -98,6 +112,34 @@ jobs:
       build_args: ${{ matrix.build_args }}
       core_hash: ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
 
+  build_tbc_variants:
+    name: Build TBC ${{ matrix.image }}:${{ matrix.image_tag }} - ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+    needs: [ get_latest_cmangos_tbc_hash, build_tbc ]
+    strategy:
+      matrix:
+        include:
+          - image: mangosd
+            image_tag: "with-playerbot-ahbot"
+            build_args: |
+              BUILD_PLAYERBOT=ON
+              BUILD_AHBOT=ON
+
+          - image: mangosd
+            image_tag: "with-playerbot"
+            build_args: BUILD_PLAYERBOT=ON
+
+          - image: mangosd
+            image_tag: "with-ahbot"
+            build_args: BUILD_AHBOT=ON
+
+    uses: ./.github/workflows/container-build-publish.yml
+    with:
+      core: tbc
+      image: ${{ matrix.image }}
+      image_tag: ${{ matrix.image_tag }}
+      build_args: ${{ matrix.build_args }}
+      core_hash: ${{ needs.get_latest_cmangos_tbc_hash.outputs.core_hash }}
+
   build_wotlk:
     name: Build WotLK ${{ matrix.image }}:${{ matrix.image_tag }} - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
     needs: get_latest_cmangos_wotlk_hash
@@ -113,6 +155,34 @@ jobs:
           - image: mangosd
             image_tag: latest
 
+          - image: mangosd
+            image_tag: "with-playerbot-ahbot"
+            build_args: |
+              BUILD_PLAYERBOT=ON
+              BUILD_AHBOT=ON
+
+          - image: mangosd
+            image_tag: "with-playerbot"
+            build_args: BUILD_PLAYERBOT=ON
+
+          - image: mangosd
+            image_tag: "with-ahbot"
+            build_args: BUILD_AHBOT=ON
+
+    uses: ./.github/workflows/container-build-publish.yml
+    with:
+      core: wotlk
+      image: ${{ matrix.image }}
+      image_tag: ${{ matrix.image_tag }}
+      build_args: ${{ matrix.build_args }}
+      core_hash: ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
+
+  build_wotlk_variants:
+    name: Build WotLK ${{ matrix.image }}:${{ matrix.image_tag }} - ${{ needs.get_latest_cmangos_wotlk_hash.outputs.core_hash }}
+    needs: [ get_latest_cmangos_wotlk_hash, build_wotlk ]
+    strategy:
+      matrix:
+        include:
           - image: mangosd
             image_tag: "with-playerbot-ahbot"
             build_args: |
