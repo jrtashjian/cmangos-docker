@@ -2,6 +2,7 @@ FROM ghcr.io/jrtashjian/cmangos-builder-base:latest as builder
 
 ARG CMANGOS_CORE=classic
 ARG CORE_COMMIT_HASH=HEAD
+ARG DB_COMMIT_HASH=HEAD
 ARG BUILD_PLAYERBOT=OFF
 ARG BUILD_AHBOT=OFF
 ARG BUILD_METRICS=OFF
@@ -9,6 +10,10 @@ ARG BUILD_METRICS=OFF
 RUN mkdir -p /opt/src && \
 	git clone https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos && \
 	if [ "$CORE_COMMIT_HASH" != "HEAD" ]; then cd /opt/src/cmangos; git checkout ${CORE_COMMIT_HASH}; fi
+
+RUN mkdir -p /opt/src && \
+	git clone https://github.com/cmangos/${CMANGOS_CORE}-db.git /opt/src/database && \
+	if [ "$DB_COMMIT_HASH" != "HEAD" ]; then cd /opt/src/database; git checkout ${DB_COMMIT_HASH}; fi
 
 RUN mkdir -p /opt/src/cmangos/build && \
 	cd /opt/src/cmangos/build && \
@@ -18,11 +23,10 @@ RUN mkdir -p /opt/src/cmangos/build && \
 # Copy config and sql scripts
 RUN cp -r /opt/cmangos/etc /opt/cmangos/configs
 RUN mkdir -p /opt/cmangos/sql && \
-	cp /opt/src/cmangos/sql/base/characters.sql /opt/cmangos/sql/ && \
-	cp /opt/src/cmangos/sql/base/logs.sql /opt/cmangos/sql/ && \
-	cp /opt/src/cmangos/sql/base/mangos.sql /opt/cmangos/sql/
+	cp -r /opt/src/cmangos/sql /opt/cmangos/sql
 
-RUN rm -rfv /opt/src
+# Remove .git dir to minimize size
+RUN rm -rfv /opt/src/database/.git
 
 FROM bitnami/minideb:latest
 LABEL org.opencontainers.image.title mangosd-${CMANGOS_CORE}
@@ -44,6 +48,7 @@ RUN apt update; \
 	rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/cmangos /opt/cmangos
+COPY --from=builder /opt/src/database /opt/database
 
 VOLUME [ "/opt/cmangos/etc" ]
 
