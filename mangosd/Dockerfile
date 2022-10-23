@@ -23,7 +23,7 @@ RUN mkdir -p /opt/src/cmangos/build && \
 # Copy config and sql scripts
 RUN cp -r /opt/cmangos/etc /opt/cmangos/configs
 RUN mkdir -p /opt/cmangos/sql && \
-	cp -r /opt/src/cmangos/sql /opt/cmangos/sql
+	cp -r /opt/src/cmangos/sql /opt/cmangos
 
 # Remove .git dir to minimize size
 RUN rm -rfv /opt/src/database/.git
@@ -49,6 +49,7 @@ RUN apt update; \
 
 COPY --from=builder /opt/cmangos /opt/cmangos
 COPY --from=builder /opt/src/database /opt/database
+COPY InstallFullDB.diff /opt/database/InstallFullDB.diff
 
 VOLUME [ "/opt/cmangos/etc" ]
 

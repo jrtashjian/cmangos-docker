@@ -1,0 +1,37 @@
+source "$1"
+
+try_set_mysql_path
+
+if ! initialize; then
+	exit 1
+fi
+
+if [[ "$2" == "WORLD" ]]; then
+	echo "Installing cmangos-world database"
+
+	if ! apply_full_content_db; then
+		exit 1
+	fi
+fi
+
+if [[ "$2" == "CHARACTERS" ]]; then
+	echo "Installing cmangos-characters database"
+
+	if ! check_dbs_accessibility; then
+		exit 1
+	fi
+	if ! apply_char_db_core_update; then
+		exit 1
+	fi
+fi
+
+if [[ "$2" == "LOGS" ]]; then
+	echo "Installing cmangos-logs database"
+
+	if ! check_dbs_accessibility; then
+		exit 1
+	fi
+	if ! apply_logs_db_core_update; then
+		exit 1
+	fi
+fi
