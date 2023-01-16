@@ -104,54 +104,93 @@ function update_config() {
 	done
 }
 
+# Execute SQL command.
+# create_db_config "env_var_prefix" "output file" "message"
+function create_db_config() {
+	if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
+
+	local DBHOST="$1_HOST"
+	local DBPORT="$1_PORT"
+	local DBUSER="$1_USER"
+	local DBPASS="$1_PASS"
+
+    local config=()
+    config+=("MYSQL_HOST=\"${!DBHOST}\"")
+    config+=("MYSQL_PORT=\"${!DBPORT}\"")
+    config+=("MYSQL_USERNAME=\"${!DBUSER}\"")
+    config+=("MYSQL_PASSWORD=\"${!DBPASS}\"")
+
+    config+=("WORLD_DB_NAME=\"${WORLD_DB_NAME}\"")
+    config+=("REALM_DB_NAME=\"${LOGIN_DB_NAME}\"")
+    config+=("CHAR_DB_NAME=\"${CHARACTERS_DB_NAME}\"")
+    config+=("LOGS_DB_NAME=\"${LOGS_DB_NAME}\"")
+
+    config+=("CORE_PATH=\"/opt/cmangos\"")
+    config+=("LOCALES=\"NO\"")
+    config+=("FORCE_WAIT=\"NO\"")
+    config+=("AHBOT=\"YES\"")
+
+    for line in "${config[@]}"; do
+        echo $line
+    done > $2
+
+    if [[ $? == 0 ]]; then
+		if [ ! -z "$3" ]; then echo "SUCCESS"; fi
+	fi
+
+	return 0
+}
+
+# Copy configs to volume
+copy_configs /opt/cmangos/configs/ /opt/cmangos/etc/
+
+create_db_config "LOGIN_DB" "/opt/database/login_db.config" "Creating login_db.config"
+
+sed -n '/^## Main program/q;p' /opt/database/InstallFullDB.sh > /opt/database/CustomInstallFullDB.sh
+chmod +x /opt/database/CustomInstallFullDB.sh
+cat /opt/database/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
+
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 
 if [ $? -eq 0 ]; then
     # Check if initialized
-    if [ ! -f "/opt/cmangos/etc/.initialized" ]; then
-		# Copy configs to volume
-		copy_configs /opt/cmangos/configs/ /opt/cmangos/etc/
-
+    if [[ ! -f "/opt/cmangos/etc/.login_db_initialized" ]] || [[ ! -f "/opt/cmangos/etc/.initialized" ]]; then
+		# Create DB
         sql_exec_admin "LOGIN_DB" \
             "CREATE DATABASE ${LOGIN_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
             "Create database ${LOGIN_DB_NAME}"
-
         sql_exec_admin "LOGIN_DB" \
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGIN_DB_NAME}.* TO ${LOGIN_DB_USER}@'%';" \
             "Grant all permissions to ${LOGIN_DB_USER} on the ${LOGIN_DB_NAME} database"
-
-        # Import DB
-        LOGIN_SQL=/opt/cmangos/sql/realmd.sql
-
-        if [ "$INSTALL_FULL_DB" = TRUE ]; then
-            wget "https://github.com/cmangos/${CMANGOS_CORE}-db/releases/download/latest/${CMANGOS_CORE}-all-db.zip"
-            unzip ${CMANGOS_CORE}-all-db.zip
-
-            LOGIN_SQL=/${CMANGOS_CORE}realmd.sql
-        fi
-
-        sql_file_exec "LOGIN_DB" $LOGIN_SQL "Installing login database"
-
-        # Cleanup
-        rm -f /$CMANGOS_CORE*.zip /$CMANGOS_CORE*.sql
+		sql_file_exec "LOGIN_DB" /opt/cmangos/sql/base/realmd.sql "Installing login database"
 
         # Create .initialized file
-        touch /opt/cmangos/etc/.initialized
+        touch /opt/cmangos/etc/.login_db_initialized
     fi
 
-    # Update realmd.conf
-	REALMD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
-	REALMD_LOGSDIR="/opt/cmangos/etc/logs"
-	update_config REALMD_ /opt/cmangos/etc/realmd.conf
-
-	# Ensure LogsDir exists
-	mkdir -p $REALMD_LOGSDIR
-
-	# Run CMaNGOS
-	cd /opt/cmangos/bin/
-	./realmd
-	exit 0;
+	if [ "$INSTALL_FULL_DB" = TRUE ]; then
+        cd /opt/database
+        /opt/database/CustomInstallFullDB.sh /opt/database/login_db.config LOGIN
+    fi
 else
     echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
     exit 1;
 fi
+
+
+# Create .initialized file
+touch /opt/cmangos/etc/.initialized
+
+# Update realmd.conf
+REALMD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
+REALMD_LOGSDIR="/opt/cmangos/etc/logs"
+
+update_config REALMD_ /opt/cmangos/etc/realmd.conf
+
+# Ensure LogsDir exists
+mkdir -p $REALMD_LOGSDIR
+
+# Run CMaNGOS
+cd /opt/cmangos/bin/
+./realmd
+exit 0;

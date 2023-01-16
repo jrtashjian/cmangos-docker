@@ -191,6 +191,11 @@ if [ $? -eq 0 ]; then
             "Updating realmlist with '${REALM_NAME}'"
 
         touch /opt/cmangos/etc/.login_db_initialized
+
+        if [ "$INSTALL_FULL_DB" = TRUE ]; then
+            cd /opt/database
+            /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config REALM
+        fi
     fi
 else
     echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
