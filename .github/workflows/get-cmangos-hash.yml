@@ -26,4 +26,4 @@ jobs:
       hash: ${{ steps.get_hash.outputs.hash }}
     steps:
       - id: get_hash
-        run: git ls-remote https://github.com/cmangos/mangos-${{ inputs.core }}.git ${{ inputs.ref }} | awk '{print "::set-output name=hash::"$1}'
+        run: git ls-remote https://github.com/cmangos/mangos-${{ inputs.core }}.git ${{ inputs.ref }} | awk '{print "hash="$1}' >> $GITHUB_OUTPUT
