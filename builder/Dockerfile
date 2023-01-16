@@ -7,6 +7,7 @@ LABEL org.opencontainers.image.licenses GPL-2.0-only
 
 RUN set -ex; \
 	apt update; \
+	apt full-upgrade -y; \
 	apt install -y \
 		binutils \
 		build-essential \
