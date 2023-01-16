@@ -117,6 +117,34 @@ function sql_file_exec() {
 	return 0
 }
 
+# Check for the existence of a database.
+# sql_exec "env_var_prefix" "sql" "message"
+function sql_check_db() {
+	if [ ! -z "$2" ]; then echo -n "$2 ... "; fi
+
+	local DBHOST="$1_HOST"
+	local DBPORT="$1_PORT"
+	local DBNAME="$1_NAME"
+	local DBUSER="$1_ADMIN_USER"
+	local DBPASS="$1_ADMIN_PASS"
+
+	export MYSQL_PWD="${!DBPASS}"
+
+	MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" -e ";" 2>&1)
+
+	if [[ $? != 0 ]]; then
+		if [ ! -z "$2" ]; then
+			echo "FAILED!"
+			echo ">>> $MYSQL_ERROR"
+		fi
+		return 1
+	else
+		if [ ! -z "$2" ]; then echo "SUCCESS"; fi
+	fi
+
+	return 0
+}
+
 # copy_configs "input_path" "output_path"
 function copy_configs() {
 	find $1 -type f -path '*.dist' -exec bash -c 'FILE=$(basename ${0}); cp '$1'$FILE '$2'${FILE//.dist/}' {} \;
@@ -183,20 +211,10 @@ cat /opt/database/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
 
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
-    # Check if initialized
-    if [[ ! -f "/opt/cmangos/etc/.login_db_initialized" ]] || [[ ! -f "/opt/cmangos/etc/.initialized" ]]; then
-        # Create or update server in realmlist.
-        sql_exec "LOGIN_DB" \
-            "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}';" \
-            "Updating realmlist with '${REALM_NAME}'"
-
-        touch /opt/cmangos/etc/.login_db_initialized
-
-        if [ "$INSTALL_FULL_DB" = TRUE ]; then
-            cd /opt/database
-            /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config REALM
-        fi
-    fi
+    # Create or update server in realmlist.
+    sql_exec "LOGIN_DB" \
+        "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}';" \
+        "Updating realmlist with '${REALM_NAME}'"
 else
     echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
     exit 1;
@@ -205,7 +223,8 @@ fi
 /wait-for-it.sh ${WORLD_DB_HOST}:${WORLD_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
     # Check if initialized
-    if [[ ! -f "/opt/cmangos/etc/.world_db_initialized" ]] || [[ ! -f "/opt/cmangos/etc/.initialized" ]]; then
+    sql_check_db "WORLD_DB" "Checking for world database"
+	if [ $? -ne 0 ]; then
         # Create DB
         sql_exec_admin "WORLD_DB" \
             "CREATE DATABASE ${WORLD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
@@ -215,8 +234,6 @@ if [ $? -eq 0 ]; then
             "Grant all permissions to ${WORLD_DB_USER} on the ${WORLD_DB_NAME} database"
         sql_file_exec "WORLD_DB" /opt/cmangos/sql/base/mangos.sql "Installing world database"
         sql_file_exec "WORLD_DB" /opt/cmangos/sql/initial-tables.sql "Adding additional data for an empty world"
-
-        touch /opt/cmangos/etc/.world_db_initialized
     fi
 
     if [ "$INSTALL_FULL_DB" = TRUE ]; then
@@ -231,7 +248,8 @@ fi
 /wait-for-it.sh ${CHARACTERS_DB_HOST}:${CHARACTERS_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
     # Check if initialized
-    if [[ ! -f "/opt/cmangos/etc/.characters_db_initialized" ]] || [[ ! -f "/opt/cmangos/etc/.initialized" ]]; then
+    sql_check_db "CHARACTERS_DB" "Checking for characters database"
+	if [ $? -ne 0 ]; then
         # Create DB
         sql_exec_admin "CHARACTERS_DB" \
             "CREATE DATABASE ${CHARACTERS_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
@@ -240,8 +258,6 @@ if [ $? -eq 0 ]; then
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${CHARACTERS_DB_NAME}.* TO ${CHARACTERS_DB_USER}@'%';" \
             "Grant all permissions to ${CHARACTERS_DB_USER} on the ${CHARACTERS_DB_NAME} database"
         sql_file_exec "CHARACTERS_DB" /opt/cmangos/sql/base/characters.sql "Installing characters database"
-
-        touch /opt/cmangos/etc/.characters_db_initialized
     fi
 
     if [ "$INSTALL_FULL_DB" = TRUE ]; then
@@ -256,7 +272,8 @@ fi
 /wait-for-it.sh ${LOGS_DB_HOST}:${LOGS_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
     # Check if initialized
-    if [[ ! -f "/opt/cmangos/etc/.logs_db_initialized" ]] || [[ ! -f "/opt/cmangos/etc/.initialized" ]]; then
+    sql_check_db "LOGS_DB" "Checking for logs database"
+	if [ $? -ne 0 ]; then
         # Create DB
         sql_exec_admin "LOGS_DB" \
             "CREATE DATABASE ${LOGS_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
@@ -265,8 +282,6 @@ if [ $? -eq 0 ]; then
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGS_DB_NAME}.* TO ${LOGS_DB_USER}@'%';" \
             "Grant all permissions to ${LOGS_DB_USER} on the ${LOGS_DB_NAME} database"
         sql_file_exec "LOGS_DB" /opt/cmangos/sql/base/logs.sql "Installing logs database"
-
-        touch /opt/cmangos/etc/.logs_db_initialized
     fi
 
     if [ "$INSTALL_FULL_DB" = TRUE ]; then
@@ -277,9 +292,6 @@ else
     echo "[ERR] Timeout while waiting for ${LOGS_DB_HOST}!";
     exit 1;
 fi
-
-# Create .initialized file
-touch /opt/cmangos/etc/.initialized
 
 # Update mangosd.conf
 MANGOSD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
@@ -301,6 +313,12 @@ update_config PLAYERBOT_ /opt/cmangos/etc/playerbot.conf
 
 # Ensure LogsDir exists
 mkdir -p $MANGOSD_LOGSDIR
+
+# Cleanup old initialize files
+rm -f /opt/cmangos/etc/.world_db_initialized
+rm -f /opt/cmangos/etc/.characters_db_initialized
+rm -f /opt/cmangos/etc/.logs_db_initialized
+rm -f /opt/cmangos/etc/.initialized
 
 # Run CMaNGOS
 cd /opt/cmangos/bin/
