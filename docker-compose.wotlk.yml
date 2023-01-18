@@ -13,7 +13,7 @@ services:
       - "./data/database:/var/lib/mysql"
 
   realmd:
-    image: ghcr.io/jrtashjian/cmangos-realmd-wotlk:master
+    image: ghcr.io/jrtashjian/cmangos-realmd-wotlk:latest
     depends_on:
       - database
     environment:
@@ -22,7 +22,6 @@ services:
       DB_USER: "${DB_USER:-mangos}"
       DB_PASS: "${DB_PASS:-mangos}"
       DB_ROOT_PASS: "${DB_ROOT_PASS:-mangos}"
-      INSTALL_FULL_DB: "TRUE"
     ports:
       - 3724:3724
     volumes:
@@ -30,9 +29,10 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
 
   mangosd:
-    image: ghcr.io/jrtashjian/cmangos-mangosd-wotlk:master
+    image: ghcr.io/jrtashjian/cmangos-mangosd-wotlk:latest
     depends_on:
       - database
+      - realmd
     environment:
       DB_HOST: "${DB_HOST:-database}"
       DB_PORT: "${DB_PORT:-3306}"
