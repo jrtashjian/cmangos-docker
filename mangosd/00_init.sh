@@ -238,8 +238,11 @@ if [ $? -eq 0 ]; then
 
     if [ "$INSTALL_FULL_DB" = TRUE ]; then
         cd /opt/database
-        /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config WORLD
+        /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config CONTENT
     fi
+
+    cd /opt/database
+    /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config WORLD
 else
     echo "[ERR] Timeout while waiting for ${WORLD_DB_HOST}!";
     exit 1;
@@ -260,10 +263,8 @@ if [ $? -eq 0 ]; then
         sql_file_exec "CHARACTERS_DB" /opt/cmangos/sql/base/characters.sql "Installing characters database"
     fi
 
-    if [ "$INSTALL_FULL_DB" = TRUE ]; then
-        cd /opt/database
-        /opt/database/CustomInstallFullDB.sh /opt/database/characters_db.config CHARACTERS
-    fi
+    cd /opt/database
+    /opt/database/CustomInstallFullDB.sh /opt/database/characters_db.config CHARACTERS
 else
     echo "[ERR] Timeout while waiting for ${CHARACTERS_DB_HOST}!";
     exit 1;
@@ -284,10 +285,8 @@ if [ $? -eq 0 ]; then
         sql_file_exec "LOGS_DB" /opt/cmangos/sql/base/logs.sql "Installing logs database"
     fi
 
-    if [ "$INSTALL_FULL_DB" = TRUE ]; then
-        cd /opt/database
-        /opt/database/CustomInstallFullDB.sh /opt/database/logs_db.config LOGS
-    fi
+    cd /opt/database
+    /opt/database/CustomInstallFullDB.sh /opt/database/logs_db.config LOGS
 else
     echo "[ERR] Timeout while waiting for ${LOGS_DB_HOST}!";
     exit 1;

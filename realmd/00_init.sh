@@ -195,10 +195,8 @@ if [ $? -eq 0 ]; then
 		sql_file_exec "LOGIN_DB" /opt/cmangos/sql/base/realmd.sql "Installing login database"
 	fi
 
-	if [ "$INSTALL_FULL_DB" = TRUE ]; then
-        cd /opt/database
-        /opt/database/CustomInstallFullDB.sh /opt/database/login_db.config LOGIN
-    fi
+	cd /opt/database
+	/opt/database/CustomInstallFullDB.sh /opt/database/login_db.config LOGIN
 else
     echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
     exit 1;
