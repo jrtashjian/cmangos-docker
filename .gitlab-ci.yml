@@ -1,0 +1,13 @@
+
+builder-image:
+  image: docker:cli
+  services:
+    - docker:dind
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/builder-base:$CI_COMMIT_REF_SLUG
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t $DOCKER_IMAGE_NAME .
+    - docker push $DOCKER_IMAGE_NAME
+  when: manual
