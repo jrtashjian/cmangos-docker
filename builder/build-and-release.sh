@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-builder-base:latest" .
-docker push "ghcr.io/jrtashjian/cmangos-builder-base:latest"
+docker build -t "registry.int.jrtashjian.com/jrtashjian/cmangos-docker/builder-base" .
+docker push "registry.int.jrtashjian.com/jrtashjian/cmangos-docker/builder-base"
