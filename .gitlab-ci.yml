@@ -17,6 +17,9 @@
 #       fi
 
 build-mangosd:
+  image: docker:cli
+  services:
+    - docker:dind
   parallel:
     matrix:
       - IMAGE_TAG: latest
@@ -30,6 +33,10 @@ build-mangosd:
       - IMAGE_TAG: with-playerbot-ahbot
         CORE: [ classic, tbc, wotlk ]
         BUILD_ARGS: BUILD_PLAYERBOT=ON BUILD_AHBOT=ON
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
+    - echo "Building $DOCKER_IMAGE_NAME"
     - echo "$BUILD_ARGS"
