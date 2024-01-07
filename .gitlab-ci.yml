@@ -16,23 +16,20 @@
 #         docker push "$CI_REGISTRY_IMAGE:latest"
 #       fi
 
-variables:
-  CORE: [ classic, tbc, wotlk ]
-
 build-mangosd:
   parallel:
     matrix:
       - IMAGE_TAG: latest
-        CORE: $CORE
+        CORE: [ classic, tbc, wotlk ]
         BUILD_ARGS: ""
       - IMAGE_TAG: with-playerbot
-        CORE: $CORE
+        CORE: [ classic, tbc, wotlk ]
         BUILD_ARGS: BUILD_PLAYERBOT=ON
       - IMAGE_TAG: with-ahbot
-        CORE: $CORE
+        CORE: [ classic, tbc, wotlk ]
         BUILD_ARGS: BUILD_AHBOT=ON
       - IMAGE_TAG: with-playerbot-ahbot
-        CORE: $CORE
+        CORE: [ classic, tbc, wotlk ]
         BUILD_ARGS: BUILD_PLAYERBOT=ON BUILD_AHBOT=ON
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
