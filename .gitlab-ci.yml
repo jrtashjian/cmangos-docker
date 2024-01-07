@@ -1,20 +1,36 @@
+build-extractors:
+  image: docker:cli
+  services:
+    - docker:dind
+  parallel:
+    matrix:
+      - CORE: classic
+      - CORE: tbc
+      - CORE: wotlk
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/extractors-$CORE:latest
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build --no-cache -t $DOCKER_IMAGE_NAME ./extractors --build-arg CMANGOS_CORE=$CORE $BUILD_ARGS
+    - docker push $DOCKER_IMAGE_NAME
 
-# builder-image:
-#   image: docker:cli
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/builder-base:$CI_COMMIT_REF_SLUG
-#   before_script:
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#   script:
-#     - docker build -t $DOCKER_IMAGE_NAME ./builder
-#     - docker push $DOCKER_IMAGE_NAME
-#     - |
-#       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-#         docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
-#         docker push "$CI_REGISTRY_IMAGE:latest"
-#       fi
+build-realmd:
+  image: docker:cli
+  services:
+    - docker:dind
+  parallel:
+    matrix:
+      - CORE: classic
+      - CORE: tbc
+      - CORE: wotlk
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/realmd-$CORE:latest
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build --no-cache -t $DOCKER_IMAGE_NAME ./realmd --build-arg CMANGOS_CORE=$CORE $BUILD_ARGS
+    - docker push $DOCKER_IMAGE_NAME
 
 build-mangosd:
   image: docker:cli
@@ -26,17 +42,17 @@ build-mangosd:
         CORE: [ classic, tbc, wotlk ]
       - IMAGE_TAG: with-playerbot
         CORE: [ classic, tbc, wotlk ]
-        BUILD_ARGS: BUILD_PLAYERBOT=ON
+        BUILD_ARGS: --build-arg BUILD_PLAYERBOT=ON
       - IMAGE_TAG: with-ahbot
         CORE: [ classic, tbc, wotlk ]
-        BUILD_ARGS: BUILD_AHBOT=ON
+        BUILD_ARGS: --build-arg BUILD_AHBOT=ON
       - IMAGE_TAG: with-playerbot-ahbot
         CORE: [ classic, tbc, wotlk ]
-        BUILD_ARGS: BUILD_PLAYERBOT=ON BUILD_AHBOT=ON
+        BUILD_ARGS: --build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON
   variables:
-    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/mangosd-$CORE:$IMAGE_TAG
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - echo "Building $DOCKER_IMAGE_NAME"
-    - echo "$BUILD_ARGS"
+    - docker build --no-cache -t $DOCKER_IMAGE_NAME ./mangosd --build-arg CMANGOS_CORE=$CORE $BUILD_ARGS
+    - docker push $DOCKER_IMAGE_NAME
