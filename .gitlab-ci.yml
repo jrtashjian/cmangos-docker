@@ -1,12 +1,39 @@
 
-builder-image:
-  image: docker:cli
-  services:
-    - docker:dind
-  variables:
-    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/builder-base:$CI_COMMIT_REF_SLUG
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+# builder-image:
+#   image: docker:cli
+#   services:
+#     - docker:dind
+#   variables:
+#     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/builder-base:$CI_COMMIT_REF_SLUG
+#   before_script:
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+#   script:
+#     - docker build -t $DOCKER_IMAGE_NAME ./builder
+#     - docker push $DOCKER_IMAGE_NAME
+#     - |
+#       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+#         docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
+#         docker push "$CI_REGISTRY_IMAGE:latest"
+#       fi
+
+build-mangosd:
+  parallel:
+    matrix:
+      - CORE:
+          - classic
+          - tbc
+          - wotlk
+      - VARIANT:
+        - image_tag: latest
+        - image_tag: "with-playerbot"
+          build_args: |
+            BUILD_PLAYERBOT=ON
+        - image_tag: "with-ahbot"
+          build_args: |
+            BUILD_AHBOT=ON
+        - image_tag: "with-playerbot-ahbot"
+          build_args: |
+            BUILD_PLAYERBOT=ON
+            BUILD_AHBOT=ON
   script:
-    - docker build -t $DOCKER_IMAGE_NAME ./builder
-    - docker push $DOCKER_IMAGE_NAME
+    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$VARIANT[image_tag]"
