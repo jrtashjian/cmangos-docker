@@ -21,7 +21,6 @@ build-mangosd:
     matrix:
       - IMAGE_TAG: latest
         CORE: [ classic, tbc, wotlk ]
-        BUILD_ARGS: ""
       - IMAGE_TAG: with-playerbot
         CORE: [ classic, tbc, wotlk ]
         BUILD_ARGS: BUILD_PLAYERBOT=ON
