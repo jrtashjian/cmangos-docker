@@ -16,13 +16,10 @@
 #         docker push "$CI_REGISTRY_IMAGE:latest"
 #       fi
 
-variables:
-  CORE: [ classic, tbc, wotlk ]
-
 build-mangosd-default:
   parallel:
     matrix:
-      - CORE: $CORE
+      - CORE: [ classic, tbc, wotlk ]
       - IMAGE_TAG: "latest"
       - BUILD_ARGS: ""
   script:
@@ -32,7 +29,7 @@ build-mangosd-default:
 build-mangosd-with-playerbot:
   parallel:
     matrix:
-      - CORE: $CORE
+      - CORE: [ classic, tbc, wotlk ]
       - IMAGE_TAG: "with-playerbot"
       - BUILD_ARGS: "BUILD_PLAYERBOT=ON"
   script:
@@ -42,7 +39,7 @@ build-mangosd-with-playerbot:
 build-mangosd-with-ahbot:
   parallel:
     matrix:
-      - CORE: $CORE
+      - CORE: [ classic, tbc, wotlk ]
       - IMAGE_TAG: "with-ahbot"
       - BUILD_ARGS: "BUILD_AHBOT=ON"
   script:
@@ -52,7 +49,7 @@ build-mangosd-with-ahbot:
 build-mangosd-with-playerbot-ahbot:
   parallel:
     matrix:
-      - CORE: $CORE
+      - CORE: [ classic, tbc, wotlk ]
       - IMAGE_TAG: "with-playerbot-ahbot"
       - BUILD_ARGS: "BUILD_PLAYERBOT=ON BUILD_AHBOT=ON"
   script:
