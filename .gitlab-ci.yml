@@ -19,8 +19,11 @@
 build-mangosd-default:
   parallel:
     matrix:
-      - CORE: [ classic, tbc, wotlk ]
-      - IMAGE_TAG: "latest"
+      - CORE:
+        - classic
+        - tbc
+        - wotlk
+      - IMAGE_TAG: latest
       - BUILD_ARGS: ""
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
@@ -29,9 +32,12 @@ build-mangosd-default:
 build-mangosd-with-playerbot:
   parallel:
     matrix:
-      - CORE: [ classic, tbc, wotlk ]
-      - IMAGE_TAG: "with-playerbot"
-      - BUILD_ARGS: "BUILD_PLAYERBOT=ON"
+      - CORE:
+        - classic
+        - tbc
+        - wotlk
+      - IMAGE_TAG: with-playerbot
+      - BUILD_ARGS: BUILD_PLAYERBOT=ON
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
     - echo "$BUILD_ARGS"
@@ -39,9 +45,12 @@ build-mangosd-with-playerbot:
 build-mangosd-with-ahbot:
   parallel:
     matrix:
-      - CORE: [ classic, tbc, wotlk ]
-      - IMAGE_TAG: "with-ahbot"
-      - BUILD_ARGS: "BUILD_AHBOT=ON"
+      - CORE:
+        - classic
+        - tbc
+        - wotlk
+      - IMAGE_TAG: with-ahbot
+      - BUILD_ARGS: BUILD_AHBOT=ON
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
     - echo "$BUILD_ARGS"
@@ -49,9 +58,12 @@ build-mangosd-with-ahbot:
 build-mangosd-with-playerbot-ahbot:
   parallel:
     matrix:
-      - CORE: [ classic, tbc, wotlk ]
-      - IMAGE_TAG: "with-playerbot-ahbot"
-      - BUILD_ARGS: "BUILD_PLAYERBOT=ON BUILD_AHBOT=ON"
+      - CORE:
+        - classic
+        - tbc
+        - wotlk
+      - IMAGE_TAG: with-playerbot-ahbot
+      - BUILD_ARGS: BUILD_PLAYERBOT=ON BUILD_AHBOT=ON
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
     - echo "$BUILD_ARGS"
