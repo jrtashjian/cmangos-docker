@@ -17,10 +17,7 @@
 #       fi
 
 variables:
-  CORE:
-    - classic
-    - tbc
-    - wotlk
+  CORE: [ classic, tbc, wotlk ]
 
 build-mangosd-default:
   parallel:
