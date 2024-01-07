@@ -16,24 +16,52 @@
 #         docker push "$CI_REGISTRY_IMAGE:latest"
 #       fi
 
-build-mangosd:
+variables:
+  CORE:
+    - classic
+    - tbc
+    - wotlk
+
+build-mangosd-default:
   parallel:
     matrix:
-      - CORE:
-          - classic
-          - tbc
-          - wotlk
-      - VARIANT:
-        - image_tag: latest
-        - image_tag: "with-playerbot"
-          build_args: |
-            BUILD_PLAYERBOT=ON
-        - image_tag: "with-ahbot"
-          build_args: |
-            BUILD_AHBOT=ON
-        - image_tag: "with-playerbot-ahbot"
-          build_args: |
-            BUILD_PLAYERBOT=ON
-            BUILD_AHBOT=ON
+      - CORE: $CORE
+      - IMAGE_TAG: "latest"
+      - BUILD_ARGS: ""
   script:
-    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$VARIANT[image_tag]"
+    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
+    - echo "$BUILD_ARGS"
+
+build-mangosd-with-playerbot:
+  parallel:
+    matrix:
+      - CORE: $CORE
+      - IMAGE_TAG: "with-playerbot"
+      - BUILD_ARGS: |
+          BUILD_PLAYERBOT=ON
+  script:
+    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
+    - echo "$BUILD_ARGS"
+
+build-mangosd-with-ahbot:
+  parallel:
+    matrix:
+      - CORE: $CORE
+      - IMAGE_TAG: "with-ahbot"
+      - BUILD_ARGS: |
+          BUILD_AHBOT=ON
+  script:
+    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
+    - echo "$BUILD_ARGS"
+
+build-mangosd-with-playerbot-ahbot:
+  parallel:
+    matrix:
+      - CORE: $CORE
+      - IMAGE_TAG: "with-playerbot-ahbot"
+      - BUILD_ARGS: |
+          BUILD_PLAYERBOT=ON
+          BUILD_AHBOT=ON
+  script:
+    - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
+    - echo "$BUILD_ARGS"
