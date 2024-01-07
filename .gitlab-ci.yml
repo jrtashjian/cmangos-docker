@@ -37,8 +37,7 @@ build-mangosd-with-playerbot:
     matrix:
       - CORE: $CORE
       - IMAGE_TAG: "with-playerbot"
-      - BUILD_ARGS: |
-          BUILD_PLAYERBOT=ON
+      - BUILD_ARGS: "BUILD_PLAYERBOT=ON"
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
     - echo "$BUILD_ARGS"
@@ -48,8 +47,7 @@ build-mangosd-with-ahbot:
     matrix:
       - CORE: $CORE
       - IMAGE_TAG: "with-ahbot"
-      - BUILD_ARGS: |
-          BUILD_AHBOT=ON
+      - BUILD_ARGS: "BUILD_AHBOT=ON"
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
     - echo "$BUILD_ARGS"
@@ -59,9 +57,7 @@ build-mangosd-with-playerbot-ahbot:
     matrix:
       - CORE: $CORE
       - IMAGE_TAG: "with-playerbot-ahbot"
-      - BUILD_ARGS: |
-          BUILD_PLAYERBOT=ON
-          BUILD_AHBOT=ON
+      - BUILD_ARGS: "BUILD_PLAYERBOT=ON BUILD_AHBOT=ON"
   script:
     - echo "Building $CI_REGISTRY_IMAGE/cmangos-mangosd-$CORE:$IMAGE_TAG"
     - echo "$BUILD_ARGS"
