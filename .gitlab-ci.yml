@@ -1,4 +1,4 @@
-image: jrtashjian/cmangos-docker/base-image
+image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/base-image
 
 variables:
   CMANGOS_CORE: "classic"
