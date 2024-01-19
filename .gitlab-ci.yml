@@ -3,6 +3,7 @@ image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/base-image
 variables:
   CMANGOS_CORE: "classic"
   BUILD_LOGIN_SERVER: "ON"
+  BUILD_GAME_SERVER: "OFF"
   BUILD_PLAYERBOT: "OFF"
   BUILD_AHBOT: "OFF"
   BUILD_METRICS: "OFF"
@@ -16,7 +17,7 @@ compile:
     - git clone https://github.com/cmangos/mangos-$CMANGOS_CORE.git /opt/src/cmangos
     - mkdir -p /opt/src/cmangos/build
     - cd /opt/src/cmangos/build
-    - cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=$HOME/cmangos -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
+    - cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=$HOME/cmangos -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_GAME_SERVER=$BUILD_GAME_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
     - make -j $(nproc)
     - make install
   artifacts:
