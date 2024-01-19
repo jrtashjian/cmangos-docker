@@ -17,10 +17,11 @@ compile:
     - git clone https://github.com/cmangos/mangos-$CMANGOS_CORE.git /opt/src/cmangos
     - mkdir -p /opt/src/cmangos/build
     - cd /opt/src/cmangos/build
-    - cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=$HOME/cmangos -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_GAME_SERVER=$BUILD_GAME_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
+    - cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_GAME_SERVER=$BUILD_GAME_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
     - make -j $(nproc)
     - make install
-    - tar -czvf cmangos.tar.gz /opt/cmangos
+    - cd /opt
+    - tar -czvf cmangos.tar.gz cmangos
   artifacts:
     paths:
       - /opt/cmangos.tar.gz
