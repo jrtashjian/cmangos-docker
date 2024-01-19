@@ -2,6 +2,7 @@ image: buildpack-deps:stable
 
 variables:
   CMANGOS_CORE: "classic"
+  BUILD_LOGIN_SERVER: "ON"
   BUILD_PLAYERBOT: "OFF"
   BUILD_AHBOT: "OFF"
   BUILD_METRICS: "OFF"
@@ -17,13 +18,17 @@ before_script:
 compile:
   stage: build
   script:
+    - echo $(nproc)
     - mkdir -p /opt/src
     - git clone https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos
     - mkdir -p /opt/src/cmangos/build
     - cd /opt/src/cmangos/build
-    - cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_PLAYERBOT=ON -DBUILD_AHBOT=ON -DBUILD_METRICS=ON
+    - cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=${BUILD_LOGIN_SERVER} -DBUILD_PLAYERBOT=${BUILD_PLAYERBOT} -DBUILD_AHBOT=${BUILD_AHBOT} -DBUILD_METRICS=${BUILD_METRICS}
     - make -j $(nproc)
     - make install
+  artifacts:
+    paths:
+      - /opt/cmangos/
   only:
     - master  # Run the pipeline only on the master branch, adjust as needed
 
