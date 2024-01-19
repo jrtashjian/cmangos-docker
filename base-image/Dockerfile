@@ -1,14 +1,14 @@
 FROM buildpack-deps:stable
-LABEL org.opencontainers.image.title builder-base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+LABEL org.opencontainers.image.title base-image
 LABEL org.opencontainers.image.description Base image for building CMaNGOS
-LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker/builder
 LABEL org.opencontainers.image.authors jrtashjian
 LABEL org.opencontainers.image.licenses GPL-2.0-only
 
 RUN set -ex; \
-	apt update; \
-	apt full-upgrade -y; \
-	apt install -y \
+	apt update && apt full-upgrade -y && apt install -y \
 		binutils \
 		build-essential \
 		cmake \
@@ -17,5 +17,4 @@ RUN set -ex; \
 		libmariadb-dev \
 		libmariadb-dev-compat \
 		mariadb-server \
-	; \
-	rm -rf /var/lib/apt/lists/*;
+	&& rm -rf /var/lib/apt/lists/*;
