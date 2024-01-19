@@ -15,12 +15,13 @@ compile:
   stage: build
   script:
     - git clone https://github.com/cmangos/mangos-$CMANGOS_CORE.git
-    - cmake ./mangos-$CMANGOS_CORE -DCMAKE_INSTALL_PREFIX=./cmangos-binaries -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_GAME_SERVER=$BUILD_GAME_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
+    - cmake ./mangos-$CMANGOS_CORE -DCMAKE_INSTALL_PREFIX=./binaries -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_GAME_SERVER=$BUILD_GAME_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
     - make -j $(nproc)
     - make install
   artifacts:
+    name: cmangos-$CMANGOS_CORE
     paths:
-      - cmangos-binaries
+      - binaries/
   only:
     - master  # Run the pipeline only on the master branch, adjust as needed
 
