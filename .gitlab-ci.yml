@@ -2,11 +2,11 @@ image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/base-image
 
 variables:
   CMANGOS_CORE: "classic"
-  BUILD_LOGIN_SERVER: "ON"
-  BUILD_GAME_SERVER: "OFF"
-  BUILD_PLAYERBOT: "OFF"
-  BUILD_AHBOT: "OFF"
-  BUILD_METRICS: "OFF"
+  BUILD_LOGIN_SERVER: "OFF"
+  BUILD_GAME_SERVER: "ON"
+  BUILD_PLAYERBOT: "ON"
+  BUILD_AHBOT: "ON"
+  BUILD_METRICS: "ON"
 
 stages:
   - build
