@@ -1,4 +1,5 @@
-FROM registry.int.jrtashjian.com/jrtashjian/cmangos-docker/builder-base:latest as builder
+ARG REGISTRY=registry.int.jrtashjian.com
+FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest as builder
 
 ARG CMANGOS_CORE=classic
 ARG CORE_COMMIT_HASH=HEAD
@@ -29,14 +30,14 @@ RUN mkdir -p /opt/cmangos/sql && \
 RUN rm -rfv /opt/src/database/.git
 
 FROM bitnami/minideb:latest
-LABEL org.opencontainers.image.title mangosd-${CMANGOS_CORE}
-LABEL org.opencontainers.image.description Containerized CMaNGOS Game Server
-LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker/mangosd
-LABEL org.opencontainers.image.authors jrtashjian
-LABEL org.opencontainers.image.licenses GPL-2.0-only
 
 ARG CMANGOS_CORE
-ENV CMANGOS_CORE=$CMANGOS_CORE
+ENV CMANGOS_CORE=${CMANGOS_CORE}
+
+LABEL org.opencontainers.image.title="mangosd-${CMANGOS_CORE}"
+LABEL org.opencontainers.image.description="Containerized CMaNGOS Game Server"
+LABEL org.opencontainers.image.authors="jrtashjian"
+LABEL org.opencontainers.image.licenses="GPL-2.0-only"
 
 RUN apt update; \
 	apt install -y \
@@ -44,8 +45,7 @@ RUN apt update; \
 		libmariadb3 \
 		wget \
 		unzip \
-	; \
-	rm -rf /var/lib/apt/lists/*
+	; rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/cmangos /opt/cmangos
 COPY --from=builder /opt/src/database /opt/database
@@ -61,7 +61,7 @@ RUN chmod +x /00_init.sh && chmod +x /wait-for-it.sh
 COPY initial-tables.sql /opt/cmangos/sql/initial-tables.sql
 
 # Add Tini
-ENV TINI_VERSION v0.19.0
+ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
