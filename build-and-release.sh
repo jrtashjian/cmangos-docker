@@ -1,25 +1,59 @@
 #!/bin/bash
+IMAGE_SOURCE="${IMAGE_SOURCE:-https://gitlab.int.jrtashjian.com/jrtashjian/cmangos-docker}"
 
-variants=(classic tbc wotlk)
-images=(extractors realmd)
+REGISTRY="${REGISTRY:-registry.int.jrtashjian.com}"
+DATE_TAG=$(date +%Y.%m.%d)
+
+variants=(classic)
+images=(realmd extractors)
+mangosd_types=(default ahbot playerbot ahbot-playerbot)
 
 for variant in "${variants[@]}"; do
+	build_args=(--build-arg CMANGOS_CORE="$variant" --build-arg REGISTRY="$REGISTRY" --label "org.opencontainers.image.source=${IMAGE_SOURCE}")
+
 	for image in "${images[@]}"; do
-		docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-$image-$variant:latest" ./$image --build-arg CMANGOS_CORE=$variant
-		docker push "ghcr.io/jrtashjian/cmangos-$image-$variant:latest"
+		image_name="${REGISTRY}/jrtashjian/cmangos-docker/$image-$variant"
+
+		docker build ./$image --no-cache "${build_args[@]}" \
+			-t "${image_name}:latest" \
+			-t "${image_name}:${DATE_TAG}"
+
+		docker push "${image_name}:latest"
+		docker push "${image_name}:${DATE_TAG}"
 	done
-done
 
-for variant in "${variants[@]}"; do
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-mangosd-$variant:latest" ./mangosd --build-arg CMANGOS_CORE=$variant
-	docker push "ghcr.io/jrtashjian/cmangos-mangosd-$variant:latest"
+	for type in "${mangosd_types[@]}"; do
+		tag_extra=""
 
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-mangosd-$variant:with-playerbot" ./mangosd --build-arg CMANGOS_CORE=$variant --build-arg BUILD_PLAYERBOT=ON
-	docker push "ghcr.io/jrtashjian/cmangos-mangosd-$variant:with-playerbot"
+		case "$type" in
+			playerbot)
+				build_args+=(--build-arg BUILD_PLAYERBOT=ON)
+				tag_extra="-playerbot"
+				;;
+			ahbot)
+				build_args+=(--build-arg BUILD_AHBOT=ON)
+				tag_extra="-ahbot"
+				;;
+			ahbot-playerbot)
+				build_args+=(--build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON)
+				tag_extra="-ahbot-playerbot"
+				;;
+		esac
 
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-mangosd-$variant:with-ahbot" ./mangosd --build-arg CMANGOS_CORE=$variant --build-arg BUILD_AHBOT=ON
-	docker push "ghcr.io/jrtashjian/cmangos-mangosd-$variant:with-ahbot"
+		image_name="${REGISTRY}/jrtashjian/cmangos-docker/mangosd-${variant}${tag_extra}"
 
-	docker build --no-cache -t "ghcr.io/jrtashjian/cmangos-mangosd-$variant:with-playerbot-ahbot" ./mangosd --build-arg CMANGOS_CORE=$variant --build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON
-	docker push "ghcr.io/jrtashjian/cmangos-mangosd-$variant:with-playerbot-ahbot"
+		if [[ "$type" == "default" ]]; then
+			docker build ./mangosd --no-cache "${build_args[@]}" \
+				-t "${image_name}:latest" \
+				-t "${image_name}:${DATE_TAG}"
+
+			docker push "${image_name}:latest"
+			docker push "${image_name}:${DATE_TAG}"
+		else
+			docker build ./mangosd --no-cache "${build_args[@]}" \
+				-t "${image_name}:${DATE_TAG}"
+
+			docker push "${image_name}:${DATE_TAG}"
+		fi
+	done
 done
