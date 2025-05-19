@@ -42,18 +42,11 @@ for variant in "${variants[@]}"; do
 
 		image_name="${REGISTRY}/jrtashjian/cmangos-docker/mangosd-${variant}${tag_extra}"
 
-		if [[ "$type" == "default" ]]; then
-			docker build ./mangosd --no-cache "${build_args[@]}" \
-				-t "${image_name}:latest" \
-				-t "${image_name}:${DATE_TAG}"
+		docker build ./mangosd --no-cache "${build_args[@]}" \
+			-t "${image_name}:latest" \
+			-t "${image_name}:${DATE_TAG}"
 
-			docker push "${image_name}:latest"
-			docker push "${image_name}:${DATE_TAG}"
-		else
-			docker build ./mangosd --no-cache "${build_args[@]}" \
-				-t "${image_name}:${DATE_TAG}"
-
-			docker push "${image_name}:${DATE_TAG}"
-		fi
+		docker push "${image_name}:latest"
+		docker push "${image_name}:${DATE_TAG}"
 	done
 done
