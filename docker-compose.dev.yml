@@ -1,16 +1,14 @@
-version: "3.5"
-
 services:
   database:
     image: mariadb:latest
     environment:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS:-mangos}"
+      MYSQL_USER: "${DB_USER:-mangos}"
+      MYSQL_PASSWORD: "${DB_PASS:-mangos}"
     ports:
-      - 3306:3306
+      - "${DB_PORT:-3306}:3306"
     volumes:
-      - "./data/database:/var/lib/mysql"
+      - "./data/${CORE_VARIANT}/database:/var/lib/mysql"
 
   realmd:
     build:
@@ -18,20 +16,15 @@ services:
       dockerfile: Dockerfile
       args:
         CMANGOS_CORE: ${CORE_VARIANT}
-    image: ghcr.io/jrtashjian/cmangos-realmd-${CORE_VARIANT}:master
+    image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:latest
     depends_on:
       - database
-    environment:
-      - REALMD_DB
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
-      - DB_SERVER
+    env_file: .env
     ports:
       - 3724:3724
     volumes:
-      - "./data/${CORE_VARIANT}_realmd_etc:/opt/cmangos/etc"
       - "/etc/localtime:/etc/localtime:ro"
+      - "./data/${CORE_VARIANT}/realmd_etc:/opt/cmangos/etc"
 
   mangosd:
     build:
@@ -39,23 +32,14 @@ services:
       dockerfile: Dockerfile
       args:
         CMANGOS_CORE: ${CORE_VARIANT}
-    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:master
+    image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:latest
     depends_on:
       - database
       - realmd
-    environment:
-      - REALMD_SERVER=realmd:3724
-      - REALMD_DB
-      - WORLD_DB=${CORE_VARIANT}_world
-      - CHARACTER_DB=${CORE_VARIANT}_characters
-      - LOGS_DB=${CORE_VARIANT}_logs
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
-      - DB_SERVER
+    env_file: .env
     ports:
       - 8085:8085
     volumes:
-      - "./data/${CORE_VARIANT}_mangosd_etc:/opt/cmangos/etc"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/path/to/extracted/client/data:/opt/cmangos-data:ro"
+      - "./data/${CORE_VARIANT}/mangosd_etc:/opt/cmangos/etc"
+      - "./extracted-data/${CORE_VARIANT}:/opt/cmangos-data:ro"
