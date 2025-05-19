@@ -73,6 +73,28 @@ docker run \
 	ghcr.io/jrtashjian/cmangos-docker/extractors-classic
 ```
 
+## Creating accounts
+
+Ensure the database and realmd services are running:
+
+```bash
+docker compose up database realmd
+```
+
+Start the mangosd server with console access enabled:
+
+```bash
+docker compose run --rm -e MANGOSD_CONSOLE_ENABLE=1 mangosd
+```
+
+In the mangosd console, create a new user account (replace `username` and `password` with your desired credentials):
+
+```
+account create username password
+```
+
+For more details, see the [official instructions](https://github.com/cmangos/issues/wiki/Installation-Instructions#creating-first-account).
+
 ## Credits
 
 Thanks to @korhaldragonir which this project was heavily inspired by [their own](https://github.com/korhaldragonir/cmangos-docker).  
