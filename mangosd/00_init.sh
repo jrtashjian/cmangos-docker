@@ -233,7 +233,6 @@ if [ $? -eq 0 ]; then
             "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES, EXECUTE, ALTER ROUTINE, CREATE ROUTINE ON ${WORLD_DB_NAME}.* TO ${WORLD_DB_USER}@'%';" \
             "Grant all permissions to ${WORLD_DB_USER} on the ${WORLD_DB_NAME} database"
         sql_file_exec "WORLD_DB" /opt/cmangos/sql/base/mangos.sql "Installing world database"
-        sql_file_exec "WORLD_DB" /opt/cmangos/sql/initial-tables.sql "Adding additional data for an empty world"
     fi
 
     if [ "$INSTALL_FULL_DB" = TRUE ]; then
