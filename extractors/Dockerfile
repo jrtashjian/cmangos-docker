@@ -1,4 +1,5 @@
-FROM registry.int.jrtashjian.com/jrtashjian/cmangos-docker/builder-base:latest as builder
+ARG REGISTRY=registry.int.jrtashjian.com
+FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest AS builder
 
 ARG CMANGOS_CORE=classic
 ARG CORE_COMMIT_HASH=HEAD
@@ -15,11 +16,14 @@ RUN mkdir -p /opt/src/cmangos/build && \
 RUN rm -rfv /opt/src
 
 FROM bitnami/minideb:latest
-LABEL org.opencontainers.image.title extractors-${CMANGOS_CORE}
-LABEL org.opencontainers.image.description Containerized CMaNGOS Extractors
-LABEL org.opencontainers.image.source https://github.com/jrtashjian/cmangos-docker/extractors
-LABEL org.opencontainers.image.authors jrtashjian
-LABEL org.opencontainers.image.licenses GPL-2.0-only
+
+ARG CMANGOS_CORE
+ENV CMANGOS_CORE=${CMANGOS_CORE}
+
+LABEL org.opencontainers.image.title="extractors-${CMANGOS_CORE}"
+LABEL org.opencontainers.image.description="Containerized CMaNGOS Extractors"
+LABEL org.opencontainers.image.authors="jrtashjian"
+LABEL org.opencontainers.image.licenses="GPL-2.0-only"
 
 COPY --from=builder /opt/cmangos /opt/cmangos
 COPY extract.sh /extract.sh

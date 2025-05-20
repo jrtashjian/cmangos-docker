@@ -1,5 +1,5 @@
 ARG REGISTRY=registry.int.jrtashjian.com
-FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest as builder
+FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest AS builder
 
 ARG CMANGOS_CORE=classic
 ARG CORE_COMMIT_HASH=HEAD
