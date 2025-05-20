@@ -25,6 +25,14 @@ if [[ "$2" == "WORLD" ]]; then
 	if ! apply_world_db_core_update; then
 		exit 1
 	fi
+
+	if ! apply_full_dbc_data; then
+		exit 1
+	fi
+
+	if ! apply_full_scriptdev2_data; then
+		exit 1
+	fi
 fi
 
 if [[ "$2" == "CHARACTERS" ]]; then

@@ -58,8 +58,6 @@ COPY 00_init.sh /00_init.sh
 COPY wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /00_init.sh && chmod +x /wait-for-it.sh
 
-COPY initial-tables.sql /opt/cmangos/sql/initial-tables.sql
-
 # Add Tini
 ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
