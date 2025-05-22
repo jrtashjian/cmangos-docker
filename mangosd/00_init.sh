@@ -235,13 +235,12 @@ if [ $? -eq 0 ]; then
         sql_file_exec "WORLD_DB" /opt/cmangos/sql/base/mangos.sql "Installing world database"
     fi
 
+	cd /opt/database
     if [ "$INSTALL_FULL_DB" = TRUE ]; then
-        cd /opt/database
         /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config CONTENT
+	else
+		/opt/database/CustomInstallFullDB.sh /opt/database/world_db.config WORLD
     fi
-
-    cd /opt/database
-    /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config WORLD
 else
     echo "[ERR] Timeout while waiting for ${WORLD_DB_HOST}!";
     exit 1;
