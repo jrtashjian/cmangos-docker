@@ -80,11 +80,11 @@ function sql_exec() {
 
 	export MYSQL_PWD="${!DBPASS}"
 
-    if [[ "$4" == "admin" ]]; then
-        MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -e "$2" 2>&1)
-    else
-        MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" -e "$2" 2>&1)
-    fi
+	if [[ "$4" == "admin" ]]; then
+		MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -e "$2" 2>&1)
+	else
+		MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" -e "$2" 2>&1)
+	fi
 
 	if [[ $? != 0 ]]; then
 		if [ ! -z "$3" ]; then
@@ -102,7 +102,7 @@ function sql_exec() {
 # Execute SQL commands from file.
 # sql_file_exec "prefix" "sql_file" "message"
 function sql_file_exec() {
-    if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
+	if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
 
 	local DBHOST="$1_HOST"
 	local DBPORT="$1_PORT"
@@ -111,7 +111,7 @@ function sql_file_exec() {
 	local DBPASS="$1_PASS"
 
 	export MYSQL_PWD="${!DBPASS}"
-    MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" < "$2" 2>&1)
+	MYSQL_ERROR=$(mysql -h "${!DBHOST}" -P "${!DBPORT}" -u "${!DBUSER}" -s -N -D "${!DBNAME}" < "$2" 2>&1)
 
 	if [[ $? != 0 ]]; then
 		if [ ! -z "$3" ]; then
@@ -164,9 +164,9 @@ function update_config() {
 	CONF=($(compgen -A variable | grep "$1"))
 
 	for KEY in "${CONF[@]}"; do
-		CONF_KEY=${KEY//${1}/}
+		CONF_KEY=${KEY#${1}}
 		CONF_KEY=${CONF_KEY//_/.}
-		sed -i 's/^\('${CONF_KEY}'\).*/\1 \= "'${!KEY//\//\\/}'"/ig' $2
+		sed -i "s/\(${CONF_KEY}\)[[:space:]]*=.*/\1 = \"${!KEY//\//\\/}\"/ig" "$2"
 	done
 }
 
@@ -180,27 +180,27 @@ function create_db_config() {
 	local DBUSER="$1_USER"
 	local DBPASS="$1_PASS"
 
-    local config=()
-    config+=("MYSQL_HOST=\"${!DBHOST}\"")
-    config+=("MYSQL_PORT=\"${!DBPORT}\"")
-    config+=("MYSQL_USERNAME=\"${!DBUSER}\"")
-    config+=("MYSQL_PASSWORD=\"${!DBPASS}\"")
+	local config=()
+	config+=("MYSQL_HOST=\"${!DBHOST}\"")
+	config+=("MYSQL_PORT=\"${!DBPORT}\"")
+	config+=("MYSQL_USERNAME=\"${!DBUSER}\"")
+	config+=("MYSQL_PASSWORD=\"${!DBPASS}\"")
 
-    config+=("WORLD_DB_NAME=\"${WORLD_DB_NAME}\"")
-    config+=("REALM_DB_NAME=\"${LOGIN_DB_NAME}\"")
-    config+=("CHAR_DB_NAME=\"${CHARACTERS_DB_NAME}\"")
-    config+=("LOGS_DB_NAME=\"${LOGS_DB_NAME}\"")
+	config+=("WORLD_DB_NAME=\"${WORLD_DB_NAME}\"")
+	config+=("REALM_DB_NAME=\"${LOGIN_DB_NAME}\"")
+	config+=("CHAR_DB_NAME=\"${CHARACTERS_DB_NAME}\"")
+	config+=("LOGS_DB_NAME=\"${LOGS_DB_NAME}\"")
 
-    config+=("CORE_PATH=\"/opt/cmangos\"")
-    config+=("LOCALES=\"NO\"")
-    config+=("FORCE_WAIT=\"NO\"")
-    config+=("AHBOT=\"YES\"")
+	config+=("CORE_PATH=\"/opt/cmangos\"")
+	config+=("LOCALES=\"NO\"")
+	config+=("FORCE_WAIT=\"NO\"")
+	config+=("AHBOT=\"YES\"")
 
-    for line in "${config[@]}"; do
-        echo $line
-    done > $2
+	for line in "${config[@]}"; do
+		echo $line
+	done > $2
 
-    if [[ $? == 0 ]]; then
+	if [[ $? == 0 ]]; then
 		if [ ! -z "$3" ]; then echo "SUCCESS"; fi
 	fi
 
@@ -220,83 +220,83 @@ cat /opt/database/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
 
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
-    # Create or update server in realmlist.
-    sql_exec "LOGIN_DB" \
+	# Create or update server in realmlist.
+	sql_exec "LOGIN_DB" \
 		"INSERT INTO realmlist (id,name,address,port,icon) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}','${MANGOSD_GAMETYPE}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}', icon='${MANGOSD_GAMETYPE}';" \
-        "Updating realmlist with '${REALM_NAME}'"
+		"Updating realmlist with '${REALM_NAME}'"
 else
-    echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
-    exit 1;
+	echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
+	exit 1;
 fi
 
 /wait-for-it.sh ${WORLD_DB_HOST}:${WORLD_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
-    # Check if initialized
-    sql_check_db "WORLD_DB" "Checking for world database"
+	# Check if initialized
+	sql_check_db "WORLD_DB" "Checking for world database"
 	if [ $? -ne 0 ]; then
-        # Create DB
-        sql_exec_admin "WORLD_DB" \
-            "CREATE DATABASE ${WORLD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
-            "Create database ${WORLD_DB_NAME}"
-        sql_exec_admin "WORLD_DB" \
-            "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES, EXECUTE, ALTER ROUTINE, CREATE ROUTINE ON ${WORLD_DB_NAME}.* TO ${WORLD_DB_USER}@'%';" \
-            "Grant all permissions to ${WORLD_DB_USER} on the ${WORLD_DB_NAME} database"
-        sql_file_exec "WORLD_DB" /opt/cmangos/sql/base/mangos.sql "Installing world database"
-    fi
+		# Create DB
+		sql_exec_admin "WORLD_DB" \
+			"CREATE DATABASE ${WORLD_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
+			"Create database ${WORLD_DB_NAME}"
+		sql_exec_admin "WORLD_DB" \
+			"GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES, EXECUTE, ALTER ROUTINE, CREATE ROUTINE ON ${WORLD_DB_NAME}.* TO ${WORLD_DB_USER}@'%';" \
+			"Grant all permissions to ${WORLD_DB_USER} on the ${WORLD_DB_NAME} database"
+		sql_file_exec "WORLD_DB" /opt/cmangos/sql/base/mangos.sql "Installing world database"
+	fi
 
 	cd /opt/database
-    if [ "$INSTALL_FULL_DB" = TRUE ]; then
-        /opt/database/CustomInstallFullDB.sh /opt/database/world_db.config CONTENT
+	if [ "$INSTALL_FULL_DB" = TRUE ]; then
+		/opt/database/CustomInstallFullDB.sh /opt/database/world_db.config CONTENT
 	else
 		/opt/database/CustomInstallFullDB.sh /opt/database/world_db.config WORLD
-    fi
+	fi
 else
-    echo "[ERR] Timeout while waiting for ${WORLD_DB_HOST}!";
-    exit 1;
+	echo "[ERR] Timeout while waiting for ${WORLD_DB_HOST}!";
+	exit 1;
 fi
 
 /wait-for-it.sh ${CHARACTERS_DB_HOST}:${CHARACTERS_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
-    # Check if initialized
-    sql_check_db "CHARACTERS_DB" "Checking for characters database"
+	# Check if initialized
+	sql_check_db "CHARACTERS_DB" "Checking for characters database"
 	if [ $? -ne 0 ]; then
-        # Create DB
-        sql_exec_admin "CHARACTERS_DB" \
-            "CREATE DATABASE ${CHARACTERS_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
-            "Create database ${CHARACTERS_DB_NAME}"
-        sql_exec_admin "CHARACTERS_DB" \
-            "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${CHARACTERS_DB_NAME}.* TO ${CHARACTERS_DB_USER}@'%';" \
-            "Grant all permissions to ${CHARACTERS_DB_USER} on the ${CHARACTERS_DB_NAME} database"
-        sql_file_exec "CHARACTERS_DB" /opt/cmangos/sql/base/characters.sql "Installing characters database"
-    fi
+		# Create DB
+		sql_exec_admin "CHARACTERS_DB" \
+			"CREATE DATABASE ${CHARACTERS_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
+			"Create database ${CHARACTERS_DB_NAME}"
+		sql_exec_admin "CHARACTERS_DB" \
+			"GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${CHARACTERS_DB_NAME}.* TO ${CHARACTERS_DB_USER}@'%';" \
+			"Grant all permissions to ${CHARACTERS_DB_USER} on the ${CHARACTERS_DB_NAME} database"
+		sql_file_exec "CHARACTERS_DB" /opt/cmangos/sql/base/characters.sql "Installing characters database"
+	fi
 
-    cd /opt/database
-    /opt/database/CustomInstallFullDB.sh /opt/database/characters_db.config CHARACTERS
+	cd /opt/database
+	/opt/database/CustomInstallFullDB.sh /opt/database/characters_db.config CHARACTERS
 else
-    echo "[ERR] Timeout while waiting for ${CHARACTERS_DB_HOST}!";
-    exit 1;
+	echo "[ERR] Timeout while waiting for ${CHARACTERS_DB_HOST}!";
+	exit 1;
 fi
 
 /wait-for-it.sh ${LOGS_DB_HOST}:${LOGS_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
-    # Check if initialized
-    sql_check_db "LOGS_DB" "Checking for logs database"
+	# Check if initialized
+	sql_check_db "LOGS_DB" "Checking for logs database"
 	if [ $? -ne 0 ]; then
-        # Create DB
-        sql_exec_admin "LOGS_DB" \
-            "CREATE DATABASE ${LOGS_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
-            "Create database ${LOGS_DB_NAME}"
-        sql_exec_admin "LOGS_DB" \
-            "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGS_DB_NAME}.* TO ${LOGS_DB_USER}@'%';" \
-            "Grant all permissions to ${LOGS_DB_USER} on the ${LOGS_DB_NAME} database"
-        sql_file_exec "LOGS_DB" /opt/cmangos/sql/base/logs.sql "Installing logs database"
-    fi
+		# Create DB
+		sql_exec_admin "LOGS_DB" \
+			"CREATE DATABASE ${LOGS_DB_NAME} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" \
+			"Create database ${LOGS_DB_NAME}"
+		sql_exec_admin "LOGS_DB" \
+			"GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON ${LOGS_DB_NAME}.* TO ${LOGS_DB_USER}@'%';" \
+			"Grant all permissions to ${LOGS_DB_USER} on the ${LOGS_DB_NAME} database"
+		sql_file_exec "LOGS_DB" /opt/cmangos/sql/base/logs.sql "Installing logs database"
+	fi
 
-    cd /opt/database
-    /opt/database/CustomInstallFullDB.sh /opt/database/logs_db.config LOGS
+	cd /opt/database
+	/opt/database/CustomInstallFullDB.sh /opt/database/logs_db.config LOGS
 else
-    echo "[ERR] Timeout while waiting for ${LOGS_DB_HOST}!";
-    exit 1;
+	echo "[ERR] Timeout while waiting for ${LOGS_DB_HOST}!";
+	exit 1;
 fi
 
 # Update mangosd.conf
