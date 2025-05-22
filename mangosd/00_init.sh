@@ -46,6 +46,15 @@ REALM_ID="${REALM_ID:=1}"
 REALM_NAME="${REALM_NAME:=MaNGOS}"
 REALM_ADDRESS="${REALM_ADDRESS:=127.0.0.1}"
 REALM_PORT="${REALM_PORT:=8085}"
+REALM_GAMETYPE="${REALM_GAMETYPE:=NORMAL}"
+
+case "${REALM_GAMETYPE^^}" in
+	"NORMAL") MANGOSD_GAMETYPE=0 ;;
+	"PVP")    MANGOSD_GAMETYPE=1 ;;
+	"RP")     MANGOSD_GAMETYPE=6 ;;
+	"RPPVP")  MANGOSD_GAMETYPE=8 ;;
+	*)        MANGOSD_GAMETYPE=0 ;;
+esac
 
 # Execute SQL command with admin credentials.
 # sql_exec_admin "env_var_prefix" "sql" "message"
@@ -213,7 +222,7 @@ cat /opt/database/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
 if [ $? -eq 0 ]; then
     # Create or update server in realmlist.
     sql_exec "LOGIN_DB" \
-        "INSERT INTO realmlist (id,name,address,port) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}';" \
+		"INSERT INTO realmlist (id,name,address,port,icon) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}','${MANGOSD_GAMETYPE}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}', icon='${MANGOSD_GAMETYPE}';" \
         "Updating realmlist with '${REALM_NAME}'"
 else
     echo "[ERR] Timeout while waiting for ${LOGIN_DB_HOST}!";
