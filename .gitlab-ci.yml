@@ -1,86 +1,94 @@
-image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/base-image
-
-variables:
-  CMANGOS_CORE: "classic"
-  BUILD_LOGIN_SERVER: "OFF"
-  BUILD_GAME_SERVER: "ON"
-  BUILD_PLAYERBOT: "ON"
-  BUILD_AHBOT: "ON"
-  BUILD_METRICS: "ON"
-
 stages:
   - build
 
-compile:
+default:
+  image: docker:cli
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - export DATE_TAG="$(date +%Y.%m.%d)"
+  after_script:
+    - if [ "$CI_COMIT_BRANCH" != "master" ]; then exit 0; fi
+    - docker rmi "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${DATE_TAG}" || true
+
+variables:
+  IMAGE_NAME: "$CI_REGISTRY_IMAGE/$IMAGE-$VARIANT"
+  BUILD_ARGS: >-
+    --build-arg CMANGOS_CORE=$VARIANT
+    --build-arg REGISTRY=$CI_REGISTRY
+    --label "org.opencontainers.image.source=${CI_PROJECT_URL}"
+
+extractors:
   stage: build
+  parallel:
+    matrix:
+      - VARIANT: [classic, tbc, wotlk]
+  variables:
+    IMAGE: extractors
   script:
-    - git clone https://github.com/cmangos/mangos-$CMANGOS_CORE.git
-    - cmake ./mangos-$CMANGOS_CORE -DCMAKE_INSTALL_PREFIX=./binaries -DBUILD_LOGIN_SERVER=$BUILD_LOGIN_SERVER -DBUILD_GAME_SERVER=$BUILD_GAME_SERVER -DBUILD_PLAYERBOT=$BUILD_PLAYERBOT -DBUILD_AHBOT=$BUILD_AHBOT -DBUILD_METRICS=$BUILD_METRICS
-    - make -j $(nproc)
-    - make install
-  artifacts:
-    name: cmangos-$CMANGOS_CORE
-    paths:
-      - binaries/
-  only:
-    - master  # Run the pipeline only on the master branch, adjust as needed
+    - |
+      if [ "$CI_COMIT_BRANCH" != "master" ]; then
+        docker build ./$IMAGE --check
+        exit 0
+      fi
+    - >-
+      docker build ./$IMAGE --no-cache $BUILD_ARGS
+      -t "${IMAGE_NAME}:latest"
+      -t "${IMAGE_NAME}:${DATE_TAG}"
+    - docker push "${IMAGE_NAME}:latest"
+    - docker push "${IMAGE_NAME}:${DATE_TAG}"
 
+realmd:
+  stage: build
+  parallel:
+    matrix:
+      - VARIANT: [classic, tbc, wotlk]
+  variables:
+    IMAGE: realmd
+  script:
+    - |
+      if [ "$CI_COMIT_BRANCH" != "master" ]; then
+        docker build ./$IMAGE --check
+        exit 0
+      fi
+    - >-
+      docker build ./$IMAGE --no-cache $BUILD_ARGS
+      -t "${IMAGE_NAME}:latest"
+      -t "${IMAGE_NAME}:${DATE_TAG}"
+    - docker push "${IMAGE_NAME}:latest"
+    - docker push "${IMAGE_NAME}:${DATE_TAG}"
 
-# build-extractors:
-#   image: docker:cli
-#   services:
-#     - docker:dind
-#   parallel:
-#     matrix:
-#       - CORE: classic
-#       - CORE: tbc
-#       - CORE: wotlk
-#   variables:
-#     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/extractors-$CORE:latest
-#   before_script:
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#   script:
-#     - docker build --no-cache -t $DOCKER_IMAGE_NAME ./extractors --build-arg CMANGOS_CORE=$CORE $BUILD_ARGS
-#     - docker push $DOCKER_IMAGE_NAME
-
-# build-realmd:
-#   image: docker:cli
-#   services:
-#     - docker:dind
-#   parallel:
-#     matrix:
-#       - CORE: classic
-#       - CORE: tbc
-#       - CORE: wotlk
-#   variables:
-#     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/realmd-$CORE:latest
-#   before_script:
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#   script:
-#     - docker build --no-cache -t $DOCKER_IMAGE_NAME ./realmd --build-arg CMANGOS_CORE=$CORE $BUILD_ARGS
-#     - docker push $DOCKER_IMAGE_NAME
-
-# build-mangosd:
-#   image: docker:cli
-#   services:
-#     - docker:dind
-#   parallel:
-#     matrix:
-#       - IMAGE_TAG: latest
-#         CORE: [ classic, tbc, wotlk ]
-#       - IMAGE_TAG: with-playerbot
-#         CORE: [ classic, tbc, wotlk ]
-#         BUILD_ARGS: --build-arg BUILD_PLAYERBOT=ON
-#       - IMAGE_TAG: with-ahbot
-#         CORE: [ classic, tbc, wotlk ]
-#         BUILD_ARGS: --build-arg BUILD_AHBOT=ON
-#       - IMAGE_TAG: with-playerbot-ahbot
-#         CORE: [ classic, tbc, wotlk ]
-#         BUILD_ARGS: --build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON
-#   variables:
-#     DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/mangosd-$CORE:$IMAGE_TAG
-#   before_script:
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#   script:
-#     - docker build --no-cache -t $DOCKER_IMAGE_NAME ./mangosd --build-arg CMANGOS_CORE=$CORE $BUILD_ARGS
-#     - docker push $DOCKER_IMAGE_NAME
+mangosd:
+  stage: build
+  parallel:
+    matrix:
+      - VARIANT: [classic, tbc, wotlk]
+        TYPE: [default, ahbot, playerbot, ahbot-playerbot]
+  variables:
+    IMAGE: mangosd
+  script:
+    - |
+      if [ "$CI_COMIT_BRANCH" != "master" ]; then
+        docker build ./$IMAGE --check
+        exit 0
+      fi
+    - |
+      case "$TYPE" in
+        playerbot)
+          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOT=ON"
+          IMAGE_NAME="$IMAGE_NAME-playerbot"
+          ;;
+        ahbot)
+          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_AHBOT=ON"
+          IMAGE_NAME="$IMAGE_NAME-ahbot"
+          ;;
+        ahbot-playerbot)
+          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON"
+          IMAGE_NAME="$IMAGE_NAME-playerbot-ahbot"
+          ;;
+      esac
+    - >-
+      docker build ./$IMAGE --no-cache $BUILD_ARGS
+      -t "${IMAGE_NAME}:latest"
+      -t "${IMAGE_NAME}:${DATE_TAG}"
+    - docker push "${IMAGE_NAME}:latest"
+    - docker push "${IMAGE_NAME}:${DATE_TAG}"
