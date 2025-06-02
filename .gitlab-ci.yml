@@ -7,7 +7,7 @@ default:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - export DATE_TAG="$(date +%Y.%m.%d)"
   after_script:
-    - if [ "$CI_COMIT_BRANCH" != "master" ]; then exit 0; fi
+    - if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then exit 0; fi
     - docker rmi "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${DATE_TAG}" || true
 
 variables:
@@ -26,7 +26,7 @@ extractors:
     IMAGE: extractors
   script:
     - |
-      if [ "$CI_COMIT_BRANCH" != "master" ]; then
+      if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
         docker build ./$IMAGE --check
         exit 0
       fi
@@ -46,7 +46,7 @@ realmd:
     IMAGE: realmd
   script:
     - |
-      if [ "$CI_COMIT_BRANCH" != "master" ]; then
+      if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
         docker build ./$IMAGE --check
         exit 0
       fi
@@ -67,7 +67,7 @@ mangosd:
     IMAGE: mangosd
   script:
     - |
-      if [ "$CI_COMIT_BRANCH" != "master" ]; then
+      if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
         docker build ./$IMAGE --check
         exit 0
       fi
