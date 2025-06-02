@@ -5,7 +5,7 @@ stages:
 default:
   image: docker:cli
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username "$CI_REGISTRY_USER" --password-stdin
     - export DATE_TAG="$(date +%Y.%m.%d)"
   after_script:
     - if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then exit 0; fi
