@@ -5,11 +5,11 @@ stages:
 default:
   image: docker:cli
   before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username "$CI_REGISTRY_USER" --password-stdin
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin
     - export DATE_TAG="$(date +%Y.%m.%d)"
   after_script:
-    - if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then exit 0; fi
-    - docker rmi "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${DATE_TAG}" || true
+    - if [ $CI_COMIT_BRANCH != $CI_DEFAULT_BRANCH ]; then exit 0; fi
+    - docker rmi $IMAGE_NAME:latest $IMAGE_NAME:$DATE_TAG || true
 
 variables:
   IMAGE_NAME: "$CI_REGISTRY_IMAGE/$IMAGE-$VARIANT"
@@ -38,10 +38,10 @@ extractors:
   script:
     - >-
       docker build ./$IMAGE --no-cache $BUILD_ARGS
-      -t "${IMAGE_NAME}:latest"
-      -t "${IMAGE_NAME}:${DATE_TAG}"
-    - docker push "${IMAGE_NAME}:latest"
-    - docker push "${IMAGE_NAME}:${DATE_TAG}"
+      -t $IMAGE_NAME:latest
+      -t $IMAGE_NAME:$DATE_TAG
+    - docker push $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:$DATE_TAG
 
 realmd:
   stage: build
@@ -55,10 +55,10 @@ realmd:
   script:
     - >-
       docker build ./$IMAGE --no-cache $BUILD_ARGS
-      -t "${IMAGE_NAME}:latest"
-      -t "${IMAGE_NAME}:${DATE_TAG}"
-    - docker push "${IMAGE_NAME}:latest"
-    - docker push "${IMAGE_NAME}:${DATE_TAG}"
+      -t $IMAGE_NAME:latest
+      -t $IMAGE_NAME:$DATE_TAG
+    - docker push $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:$DATE_TAG
 
 mangosd:
   stage: build
@@ -84,12 +84,12 @@ mangosd:
           ;;
         ahbot-playerbot)
           BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON"
-          IMAGE_NAME="$IMAGE_NAME-playerbot-ahbot"
+          IMAGE_NAME="$IMAGE_NAME-ahbot-playerbot"
           ;;
       esac
     - >-
       docker build ./$IMAGE --no-cache $BUILD_ARGS
-      -t "${IMAGE_NAME}:latest"
-      -t "${IMAGE_NAME}:${DATE_TAG}"
-    - docker push "${IMAGE_NAME}:latest"
-    - docker push "${IMAGE_NAME}:${DATE_TAG}"
+      -t $IMAGE_NAME:latest
+      -t $IMAGE_NAME:$DATE_TAG
+    - docker push $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:$DATE_TAG
