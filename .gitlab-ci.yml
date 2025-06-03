@@ -68,6 +68,7 @@ mangosd:
         TYPE: [default, ahbot, playerbot, ahbot-playerbot]
   variables:
     IMAGE: mangosd
+  resource_group: mangosd-$VARIANT
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
