@@ -16,7 +16,7 @@ variables:
   BUILD_ARGS: >-
     --build-arg CMANGOS_CORE=$VARIANT
     --build-arg REGISTRY=$CI_REGISTRY
-    --label "org.opencontainers.image.source=${CI_PROJECT_URL}"
+    --label org.opencontainers.image.source=$CI_PROJECT_URL
 
 validate-dockerfiles:
   stage: validate
