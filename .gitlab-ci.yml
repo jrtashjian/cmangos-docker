@@ -8,7 +8,7 @@ default:
     - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin
     - export DATE_TAG="$(date +%Y.%m.%d)"
   after_script:
-    - if [ $CI_COMIT_BRANCH != $CI_DEFAULT_BRANCH ]; then exit 0; fi
+    - if [ "$CI_COMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then exit 0; fi
     - docker rmi $IMAGE_NAME:latest $IMAGE_NAME:$DATE_TAG || true
 
 variables:
