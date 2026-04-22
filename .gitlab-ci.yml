@@ -40,6 +40,8 @@ builder-base:
       -t $IMAGE_NAME:$DATE_TAG
     - docker push $IMAGE_NAME:latest
     - docker push $IMAGE_NAME:$DATE_TAG
+  tags:
+    - large
 
 extractors:
   stage: build
@@ -58,6 +60,8 @@ extractors:
       -t $IMAGE_NAME:$DATE_TAG
     - docker push $IMAGE_NAME:latest
     - docker push $IMAGE_NAME:$DATE_TAG
+  tags:
+    - large
 
 realmd:
   stage: build
@@ -76,6 +80,8 @@ realmd:
       -t $IMAGE_NAME:$DATE_TAG
     - docker push $IMAGE_NAME:latest
     - docker push $IMAGE_NAME:$DATE_TAG
+  tags:
+    - large
 
 mangosd:
   stage: build
@@ -111,3 +117,5 @@ mangosd:
       -t $IMAGE_NAME:$DATE_TAG
     - docker push $IMAGE_NAME:latest
     - docker push $IMAGE_NAME:$DATE_TAG
+  tags:
+    - large
