@@ -324,7 +324,6 @@ rm -f /opt/cmangos/etc/.characters_db_initialized
 rm -f /opt/cmangos/etc/.logs_db_initialized
 rm -f /opt/cmangos/etc/.initialized
 
-# Run CMaNGOS
+# Run CMaNGOS (exec so the server is PID 1 and receives signals)
 cd /opt/cmangos/bin/
-./mangosd
-exit 0;
+exec ./mangosd

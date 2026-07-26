@@ -215,7 +215,6 @@ mkdir -p $REALMD_LOGSDIR
 rm -f /opt/cmangos/etc/.login_db_initialized
 rm -f /opt/cmangos/etc/.initialized
 
-# Run CMaNGOS
+# Run CMaNGOS (exec so the server is PID 1 and receives signals)
 cd /opt/cmangos/bin/
-./realmd
-exit 0;
+exec ./realmd

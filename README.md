@@ -99,5 +99,4 @@ For more details, see the [official instructions](https://github.com/cmangos/iss
 
 Thanks to @korhaldragonir which this project was heavily inspired by [their own](https://github.com/korhaldragonir/cmangos-docker).  
 Thanks to @vishnubob and contributors for the [wait-for-it.sh](https://github.com/vishnubob/wait-for-it) script.  
-Thanks to @krallin and contributors for making [tini](https://github.com/krallin/tini/).  
 Thanks to [CMaNGOS Community](https://github.com/cmangos).

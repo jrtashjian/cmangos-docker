@@ -51,7 +51,6 @@ RUN chmod +x /00_init.sh
 
 VOLUME [ "/opt/cmangos/etc" ]
 
-ENTRYPOINT ["/tini", "--"]
-CMD ["/00_init.sh"]
+ENTRYPOINT ["/00_init.sh"]
 
 EXPOSE 8085

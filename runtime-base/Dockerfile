@@ -13,7 +13,5 @@ RUN apt update; \
 		unzip \
 	; rm -rf /var/lib/apt/lists/*
 
-ENV TINI_VERSION=v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 COPY wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /tini /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
