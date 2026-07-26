@@ -216,7 +216,7 @@ create_db_config "LOGS_DB" "/opt/database/logs_db.config" "Creating logs_db.conf
 
 sed -n '/^## Main program/q;p' /opt/database/InstallFullDB.sh > /opt/database/CustomInstallFullDB.sh
 chmod +x /opt/database/CustomInstallFullDB.sh
-cat /opt/database/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
+cat /usr/share/cmangos/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
 
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 if [ $? -eq 0 ]; then

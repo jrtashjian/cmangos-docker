@@ -14,4 +14,5 @@ RUN apt update; \
 	; rm -rf /var/lib/apt/lists/*
 
 COPY wait-for-it.sh /wait-for-it.sh
+COPY InstallFullDB.diff /usr/share/cmangos/InstallFullDB.diff
 RUN chmod +x /wait-for-it.sh

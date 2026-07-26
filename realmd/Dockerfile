@@ -23,7 +23,6 @@ RUN cp -r /opt/cmangos/etc /opt/cmangos/configs
 RUN mkdir -p /opt/cmangos/sql && \
 	cp -r /opt/src/cmangos/sql /opt/cmangos
 
-COPY InstallFullDB.diff /opt/src/database/InstallFullDB.diff
 # Zero mtimes so separately built images produce identical layer digests.
 RUN rm -rf /opt/src/database/.git \
 	&& find /opt/src/database -exec touch -h -d @0 {} +

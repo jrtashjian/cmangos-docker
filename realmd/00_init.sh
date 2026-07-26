@@ -176,7 +176,7 @@ create_db_config "LOGIN_DB" "/opt/database/login_db.config" "Creating login_db.c
 
 sed -n '/^## Main program/q;p' /opt/database/InstallFullDB.sh > /opt/database/CustomInstallFullDB.sh
 chmod +x /opt/database/CustomInstallFullDB.sh
-cat /opt/database/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
+cat /usr/share/cmangos/InstallFullDB.diff >> /opt/database/CustomInstallFullDB.sh
 
 /wait-for-it.sh ${LOGIN_DB_HOST}:${LOGIN_DB_PORT} -t 900
 if [ $? -eq 0 ]; then
