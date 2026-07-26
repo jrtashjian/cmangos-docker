@@ -22,7 +22,7 @@ validate-dockerfiles:
   stage: validate
   parallel:
     matrix:
-      - IMAGE: [builder-base, extractors, realmd, mangosd]
+      - IMAGE: [builder-base, runtime-base, extractors, realmd, mangosd]
   script:
     - docker build ./$IMAGE --check
 
@@ -30,6 +30,23 @@ builder-base:
   stage: build
   variables:
     IMAGE: builder-base
+    IMAGE_NAME: "$CI_REGISTRY_IMAGE/$IMAGE"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - >-
+      docker build ./$IMAGE --no-cache $BUILD_ARGS
+      -t $IMAGE_NAME:latest
+      -t $IMAGE_NAME:$DATE_TAG
+    - docker push $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:$DATE_TAG
+  tags:
+    - large
+
+runtime-base:
+  stage: build
+  variables:
+    IMAGE: runtime-base
     IMAGE_NAME: "$CI_REGISTRY_IMAGE/$IMAGE"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -65,7 +82,7 @@ extractors:
 
 realmd:
   stage: build
-  needs: [builder-base]
+  needs: [builder-base, runtime-base]
   parallel:
     matrix:
       - VARIANT: [classic, tbc, wotlk]
@@ -85,7 +102,7 @@ realmd:
 
 mangosd:
   stage: build
-  needs: [builder-base]
+  needs: [builder-base, runtime-base]
   parallel:
     matrix:
       - VARIANT: [classic, tbc, wotlk]
