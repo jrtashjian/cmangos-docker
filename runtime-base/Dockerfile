@@ -14,6 +14,7 @@ RUN apt update; \
 	; rm -rf /var/lib/apt/lists/*
 
 COPY wait-for-it.sh /wait-for-it.sh
+COPY check-port /usr/local/bin/check-port
 COPY InstallFullDB.diff /usr/share/cmangos/InstallFullDB.diff
 COPY init-lib.sh /usr/share/cmangos/init-lib.sh
-RUN chmod +x /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh /usr/local/bin/check-port

@@ -9,6 +9,12 @@ services:
       - "${DB_PORT:-3306}:3306"
     volumes:
       - "./data/${CORE_VARIANT}/database:/var/lib/mysql"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   realmd:
     build:
@@ -18,13 +24,20 @@ services:
         CMANGOS_CORE: ${CORE_VARIANT}
     image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:latest
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     env_file: .env
     ports:
       - 3724:3724
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "./data/${CORE_VARIANT}/realmd_etc:/opt/cmangos/etc"
+    healthcheck:
+      test: ["CMD", "check-port", "3724"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
 
   mangosd:
     build:
@@ -34,8 +47,10 @@ services:
         CMANGOS_CORE: ${CORE_VARIANT}
     image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:latest
     depends_on:
-      - database
-      - realmd
+      database:
+        condition: service_healthy
+      realmd:
+        condition: service_healthy
     env_file: .env
     ports:
       - 8085:8085
@@ -43,3 +58,9 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - "./data/${CORE_VARIANT}/mangosd_etc:/opt/cmangos/etc"
       - "./extracted-data/${CORE_VARIANT}:/opt/cmangos-data:ro"
+    healthcheck:
+      test: ["CMD", "check-port", "8085"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 600s
