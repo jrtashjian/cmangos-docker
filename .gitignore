@@ -2,3 +2,4 @@
 docker-compose.yml
 /data/
 /extracted-data/
+/sources/
