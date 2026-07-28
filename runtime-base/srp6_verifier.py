@@ -59,9 +59,9 @@ def calculate(username, password):
     # Step 5: v = g^x mod N
     v_int = pow(G, x_int, N)
 
-    # Step 6: Format as uppercase hex (matching BN_bn2hex)
+    # Step 6: Format as uppercase hex (matching BN_bn2hex / to_bytes)
     s_hex = salt.hex().upper()
-    v_hex = format(v_int, "X")
+    v_hex = v_int.to_bytes((v_int.bit_length() + 7) // 8, "big").hex().upper()
 
     return s_hex, v_hex
 
