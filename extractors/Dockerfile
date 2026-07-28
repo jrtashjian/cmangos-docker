@@ -23,10 +23,14 @@ LABEL org.opencontainers.image.description="Containerized CMaNGOS Extractors"
 LABEL org.opencontainers.image.authors="jrtashjian"
 LABEL org.opencontainers.image.licenses="GPL-2.0-only"
 
-COPY --from=builder /opt/cmangos /opt/cmangos
-COPY extract.sh /extract.sh
-RUN chmod +x /extract.sh \
-	/opt/cmangos/bin/tools/ExtractResources.sh \
-	/opt/cmangos/bin/tools/MoveMapGen.sh
+COPY --from=builder --chown=cmangos:cmangos /opt/cmangos /opt/cmangos
+COPY --chmod=755 --chown=cmangos:cmangos extract.sh /extract.sh
+
+RUN groupadd -g 1000 cmangos && \
+    useradd -u 1000 -g cmangos -M -s /usr/sbin/nologin cmangos && \
+    chmod +x /opt/cmangos/bin/tools/ExtractResources.sh \
+             /opt/cmangos/bin/tools/MoveMapGen.sh
+
+USER cmangos
 
 CMD ["/extract.sh"]

@@ -5,16 +5,14 @@ LABEL org.opencontainers.image.description="Shared runtime base for CMaNGOS serv
 LABEL org.opencontainers.image.authors="jrtashjian"
 LABEL org.opencontainers.image.licenses="GPL-2.0-only"
 
-RUN apt update; \
-	apt install -y \
-		mariadb-client \
-		libmariadb3 \
-		wget \
-		unzip \
-	; rm -rf /var/lib/apt/lists/*
+RUN install_packages ca-certificates mariadb-client libmariadb3
 
-COPY wait-for-it.sh /wait-for-it.sh
-COPY check-port /usr/local/bin/check-port
+COPY --chmod=755 wait-for-it.sh /wait-for-it.sh
+COPY --chmod=755 check-port /usr/local/bin/check-port
 COPY InstallFullDB.diff /usr/share/cmangos/InstallFullDB.diff
 COPY init-lib.sh /usr/share/cmangos/init-lib.sh
-RUN chmod +x /wait-for-it.sh /usr/local/bin/check-port
+
+RUN groupadd -g 1000 cmangos && \
+    useradd -u 1000 -g cmangos -M -s /usr/sbin/nologin cmangos
+
+USER cmangos

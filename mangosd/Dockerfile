@@ -35,11 +35,10 @@ LABEL org.opencontainers.image.description="Containerized CMaNGOS Game Server"
 LABEL org.opencontainers.image.authors="jrtashjian"
 LABEL org.opencontainers.image.licenses="GPL-2.0-only"
 
-COPY --from=builder /opt/src/database /opt/database
-COPY --from=builder /opt/cmangos /opt/cmangos
+COPY --from=builder --chown=cmangos:cmangos /opt/src/database /opt/database
+COPY --from=builder --chown=cmangos:cmangos /opt/cmangos /opt/cmangos
 
-COPY 00_init.sh /00_init.sh
-RUN chmod +x /00_init.sh
+COPY --chmod=755 --chown=cmangos:cmangos 00_init.sh /00_init.sh
 
 VOLUME [ "/opt/cmangos/etc" ]
 
