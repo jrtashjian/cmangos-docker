@@ -15,6 +15,11 @@ ensure_database LOGIN_DB login \
 	/opt/database/login_db.config \
 	LOGIN
 
+if ! ensure_accounts LOGIN_DB; then
+	echo "[ERR] Account setup failed"
+	exit 1
+fi
+
 REALMD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
 REALMD_LOGSDIR="/opt/cmangos/etc/logs"
 

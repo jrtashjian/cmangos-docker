@@ -51,7 +51,7 @@ Update your World of Warcraft client's `realmlist.wtf` file to point to your loc
 set realmlist 127.0.0.1
 ```
 
-Login with your client using the default username:password combos:
+Login with your client using the default username:password combos (unless `ACCOUNTS` is set, in which case these are replaced by your configured accounts):
 
 ```
 ADMINISTRATOR:ADMINISTRATOR
@@ -74,6 +74,20 @@ docker run \
 ```
 
 ## Creating accounts
+
+### Automated (env var)
+
+Set the `ACCOUNTS` variable in your `.env` file. When present, the four default seed accounts (`ADMINISTRATOR`, `GAMEMASTER`, `MODERATOR`, `PLAYER`) are removed and replaced with the accounts you define. Expansion is derived automatically from `CORE_VARIANT`.
+
+```bash
+# Format: username:password[:gmlevel],...
+# username: letters/digits only; gmlevel: 0=PLAYER, 1=MODERATOR, 2=GAMEMASTER, 3=ADMINISTRATOR
+ACCOUNTS=admin:changeme:3,player:changeme
+```
+
+Accounts are upserted each time `realmd` starts. Default seed accounts not listed in `ACCOUNTS` are removed.
+
+### Manual (console)
 
 Ensure the database and realmd services are running:
 

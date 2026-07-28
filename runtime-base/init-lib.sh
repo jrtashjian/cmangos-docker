@@ -200,6 +200,124 @@ wait_for_db() {
 	fi
 }
 
+_expansion_for_core() {
+	case "${CMANGOS_CORE}" in
+		"tbc")   echo 1 ;;
+		"wotlk") echo 2 ;;
+		*)       echo 0 ;;
+	esac
+}
+
+# ensure_accounts "env_var_prefix"
+#
+# When ACCOUNTS is set (comma-separated username:password[:gmlevel] entries),
+# upserts the listed accounts then removes unused default seed accounts.
+# Expansion is always derived from CMANGOS_CORE.
+ensure_accounts() {
+	local prefix="$1"
+
+	if [ -z "$ACCOUNTS" ]; then
+		return 0
+	fi
+
+	local expansion
+	expansion=$(_expansion_for_core)
+
+	local -a usernames=()
+	local -a passwords=()
+	local -a gmlevels=()
+	local -A configured_users=()
+
+	local IFS=','
+	local entry
+	for entry in $ACCOUNTS; do
+		entry="${entry#"${entry%%[![:space:]]*}"}"
+		entry="${entry%"${entry##*[![:space:]]}"}"
+		if [ -z "$entry" ]; then
+			continue
+		fi
+
+		local -a parts
+		IFS=':' read -ra parts <<< "$entry"
+
+		local username="${parts[0]}"
+		local gmlevel=0
+		local password=""
+
+		local last_idx=$(( ${#parts[@]} - 1 ))
+		# gmlevel only when at least username:password:gmlevel (3+ fields)
+		if [ "$last_idx" -ge 2 ] && [[ "${parts[$last_idx]}" =~ ^[0-9]+$ ]]; then
+			gmlevel="${parts[$last_idx]}"
+			password=$(IFS=':'; echo "${parts[*]:1:$((last_idx - 1))}")
+		else
+			if [ ${#parts[@]} -gt 1 ]; then
+				password=$(IFS=':'; echo "${parts[*]:1}")
+			fi
+		fi
+
+		username="${username^^}"
+
+		if [[ ! "$username" =~ ^[A-Z0-9]+$ ]]; then
+			echo ">>> Invalid username '${username}' (use letters and digits only)"
+			return 1
+		fi
+
+		if [ "$gmlevel" -lt 0 ] || [ "$gmlevel" -gt 3 ]; then
+			echo ">>> Invalid gmlevel '${gmlevel}' for '${username}' (expected 0-3)"
+			return 1
+		fi
+
+		usernames+=("$username")
+		passwords+=("$password")
+		gmlevels+=("$gmlevel")
+		configured_users["$username"]=1
+	done
+
+	if [ ${#usernames[@]} -eq 0 ]; then
+		echo ">>> ACCOUNTS is set but contains no valid entries"
+		return 1
+	fi
+
+	local i
+	for i in "${!usernames[@]}"; do
+		local username="${usernames[$i]}"
+		local password="${passwords[$i]}"
+		local gmlevel="${gmlevels[$i]}"
+
+		local srp_output
+		srp_output=$(python3 /usr/share/cmangos/srp6_verifier.py "$username" "$password") || {
+			echo ">>> SRP6 computation failed for '${username}'"
+			return 1
+		}
+
+		local s_hex v_hex
+		s_hex=$(printf '%s\n' "$srp_output" | cut -f1)
+		v_hex=$(printf '%s\n' "$srp_output" | cut -f2)
+
+		if [ -z "$s_hex" ] || [ -z "$v_hex" ]; then
+			echo ">>> SRP6 produced empty salt/verifier for '${username}'"
+			return 1
+		fi
+
+		sql_exec "$prefix" \
+			"INSERT INTO account (username,v,s,gmlevel,expansion,joindate) VALUES ('${username}','${v_hex}','${s_hex}',${gmlevel},${expansion},NOW()) ON DUPLICATE KEY UPDATE gmlevel=${gmlevel}, expansion=${expansion};" \
+			"Creating account '${username}' (gm=${gmlevel}, expansion=${expansion})" || return 1
+	done
+
+	local seed_user
+	for seed_user in ADMINISTRATOR GAMEMASTER MODERATOR PLAYER; do
+		if [ -z "${configured_users[$seed_user]+x}" ]; then
+			sql_exec "$prefix" \
+				"DELETE rc FROM realmcharacters rc INNER JOIN account a ON a.id = rc.acctid WHERE a.username = '${seed_user}'; DELETE FROM account WHERE username = '${seed_user}';" \
+				"Removing default account '${seed_user}'" || return 1
+		fi
+	done
+
+	sql_exec "$prefix" \
+		"INSERT IGNORE INTO realmcharacters (realmid, acctid, numchars) SELECT realmlist.id, account.id, 0 FROM realmlist, account LEFT JOIN realmcharacters ON realmcharacters.acctid = account.id WHERE realmcharacters.acctid IS NULL;" \
+		"Backfilling realmcharacters" || return 1
+}
+
 # ensure_database "prefix" "friendly_name" "base_sql" "config_file" "install_role" ["extra_grants"]
 ensure_database() {
 	local prefix="$1"
