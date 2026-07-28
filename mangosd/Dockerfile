@@ -1,20 +1,14 @@
+# syntax=docker/dockerfile:1
 ARG REGISTRY=registry.int.jrtashjian.com
 FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest AS builder
 
 ARG CMANGOS_CORE=classic
-ARG CORE_COMMIT_HASH=HEAD
-ARG DB_COMMIT_HASH=HEAD
 ARG BUILD_PLAYERBOT=OFF
 ARG BUILD_AHBOT=OFF
 ARG BUILD_METRICS=OFF
 
-RUN mkdir -p /opt/src && \
-	git clone https://github.com/cmangos/mangos-${CMANGOS_CORE}.git /opt/src/cmangos && \
-	if [ "$CORE_COMMIT_HASH" != "HEAD" ]; then cd /opt/src/cmangos; git checkout ${CORE_COMMIT_HASH}; fi
-
-RUN mkdir -p /opt/src && \
-	git clone https://github.com/cmangos/${CMANGOS_CORE}-db.git /opt/src/database && \
-	if [ "$DB_COMMIT_HASH" != "HEAD" ]; then cd /opt/src/database; git checkout ${DB_COMMIT_HASH}; fi
+COPY --from=cmangos / /opt/src/cmangos
+COPY --from=database / /opt/src/database
 
 RUN mkdir -p /opt/src/cmangos/build && \
 	cd /opt/src/cmangos/build && \
@@ -27,8 +21,7 @@ RUN mkdir -p /opt/cmangos/sql && \
 	cp -r /opt/src/cmangos/sql /opt/cmangos
 
 # Zero mtimes so separately built images produce identical layer digests.
-RUN rm -rf /opt/src/database/.git \
-	&& find /opt/src/database -exec touch -h -d @0 {} +
+RUN find /opt/src/database -exec touch -h -d @0 {} +
 
 # --- runtime ---
 ARG REGISTRY=registry.int.jrtashjian.com
