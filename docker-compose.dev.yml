@@ -20,6 +20,9 @@ services:
     build:
       context: ./realmd/
       dockerfile: Dockerfile
+      additional_contexts:
+        cmangos: ./sources/${CORE_VARIANT}/cmangos
+        database: ./sources/${CORE_VARIANT}/database
       args:
         CMANGOS_CORE: ${CORE_VARIANT}
     image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/realmd-${CORE_VARIANT}:latest
@@ -43,6 +46,9 @@ services:
     build:
       context: ./mangosd/
       dockerfile: Dockerfile
+      additional_contexts:
+        cmangos: ./sources/${CORE_VARIANT}/cmangos
+        database: ./sources/${CORE_VARIANT}/database
       args:
         CMANGOS_CORE: ${CORE_VARIANT}
     image: registry.int.jrtashjian.com/jrtashjian/cmangos-docker/mangosd-${CORE_VARIANT}:latest
