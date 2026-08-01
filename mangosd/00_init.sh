@@ -15,11 +15,11 @@ REALM_PORT="${REALM_PORT:=8085}"
 REALM_GAMETYPE="${REALM_GAMETYPE:=NORMAL}"
 
 case "${REALM_GAMETYPE^^}" in
-	"NORMAL") MANGOSD_GAMETYPE=0 ;;
-	"PVP")    MANGOSD_GAMETYPE=1 ;;
-	"RP")     MANGOSD_GAMETYPE=6 ;;
-	"RPPVP")  MANGOSD_GAMETYPE=8 ;;
-	*)        MANGOSD_GAMETYPE=0 ;;
+"NORMAL") MANGOSD_GAMETYPE=0 ;;
+"PVP") MANGOSD_GAMETYPE=1 ;;
+"RP") MANGOSD_GAMETYPE=6 ;;
+"RPPVP") MANGOSD_GAMETYPE=8 ;;
+*) MANGOSD_GAMETYPE=0 ;;
 esac
 
 copy_configs /opt/cmangos/configs/ /opt/cmangos/etc/
@@ -31,29 +31,29 @@ ensure_custom_install_full_db
 
 wait_for_db LOGIN_DB
 sql_exec "LOGIN_DB" \
-	"INSERT INTO realmlist (id,name,address,port,icon) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}','${MANGOSD_GAMETYPE}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}', icon='${MANGOSD_GAMETYPE}';" \
-	"Updating realmlist with '${REALM_NAME}'"
+    "INSERT INTO realmlist (id,name,address,port,icon) VALUES (${REALM_ID},'${REALM_NAME}','${REALM_ADDRESS}','${REALM_PORT}','${MANGOSD_GAMETYPE}') ON DUPLICATE KEY UPDATE name='${REALM_NAME}', address='${REALM_ADDRESS}', port='${REALM_PORT}', icon='${MANGOSD_GAMETYPE}';" \
+    "Updating realmlist with '${REALM_NAME}'"
 
 WORLD_INSTALL_ROLE="WORLD"
 if [ "$INSTALL_FULL_DB" = TRUE ]; then
-	WORLD_INSTALL_ROLE="CONTENT"
+    WORLD_INSTALL_ROLE="CONTENT"
 fi
 
 ensure_database WORLD_DB world \
-	/opt/cmangos/sql/base/mangos.sql \
-	/opt/database/world_db.config \
-	"$WORLD_INSTALL_ROLE" \
-	"$WORLD_DB_EXTRA_GRANTS"
+    /opt/cmangos/sql/base/mangos.sql \
+    /opt/database/world_db.config \
+    "$WORLD_INSTALL_ROLE" \
+    "$WORLD_DB_EXTRA_GRANTS"
 
 ensure_database CHARACTERS_DB characters \
-	/opt/cmangos/sql/base/characters.sql \
-	/opt/database/characters_db.config \
-	CHARACTERS
+    /opt/cmangos/sql/base/characters.sql \
+    /opt/database/characters_db.config \
+    CHARACTERS
 
 ensure_database LOGS_DB logs \
-	/opt/cmangos/sql/base/logs.sql \
-	/opt/database/logs_db.config \
-	LOGS
+    /opt/cmangos/sql/base/logs.sql \
+    /opt/database/logs_db.config \
+    LOGS
 
 MANGOSD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
 MANGOSD_WORLDDATABASEINFO="${WORLD_DB_HOST};${WORLD_DB_PORT};${WORLD_DB_USER};${WORLD_DB_PASS};${WORLD_DB_NAME}"

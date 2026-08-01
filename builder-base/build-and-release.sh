@@ -9,5 +9,5 @@ docker build . --no-cache \
     -t "${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest" \
     -t "${REGISTRY}/jrtashjian/cmangos-docker/builder-base:${DATE_TAG}"
 
-docker push "${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest"
-docker push "${REGISTRY}/jrtashjian/cmangos-docker/builder-base:${DATE_TAG}"
+#docker push "${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest"
+#docker push "${REGISTRY}/jrtashjian/cmangos-docker/builder-base:${DATE_TAG}"

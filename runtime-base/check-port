@@ -3,18 +3,18 @@
 # Uses /proc/net/tcp{,6} so no extra packages are required.
 
 if [ -z "$1" ]; then
-	echo "usage: check-port <port>" >&2
-	exit 2
+    echo "usage: check-port <port>" >&2
+    exit 2
 fi
 
 port_hex=$(printf '%04X' "$1")
 
 for table in /proc/net/tcp /proc/net/tcp6; do
-	[ -r "$table" ] || continue
-	# local_address is IP:PORT; state 0A is TCP_LISTEN
-	if grep -E ":${port_hex} " "$table" 2>/dev/null | grep -q " 0A "; then
-		exit 0
-	fi
+    [ -r "$table" ] || continue
+    # local_address is IP:PORT; state 0A is TCP_LISTEN
+    if grep -E ":${port_hex} " "$table" 2>/dev/null | grep -q " 0A "; then
+        exit 0
+    fi
 done
 
 exit 1

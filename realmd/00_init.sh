@@ -11,13 +11,13 @@ create_db_config "LOGIN_DB" "/opt/database/login_db.config" "Creating login_db.c
 ensure_custom_install_full_db
 
 ensure_database LOGIN_DB login \
-	/opt/cmangos/sql/base/realmd.sql \
-	/opt/database/login_db.config \
-	LOGIN
+    /opt/cmangos/sql/base/realmd.sql \
+    /opt/database/login_db.config \
+    LOGIN
 
 if ! ensure_accounts LOGIN_DB; then
-	echo "[ERR] Account setup failed"
-	exit 1
+    echo "[ERR] Account setup failed"
+    exit 1
 fi
 
 REALMD_LOGINDATABASEINFO="${LOGIN_DB_HOST};${LOGIN_DB_PORT};${LOGIN_DB_USER};${LOGIN_DB_PASS};${LOGIN_DB_NAME}"
