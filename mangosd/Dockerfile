@@ -3,7 +3,7 @@ ARG REGISTRY=registry.int.jrtashjian.com
 FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest AS builder
 
 ARG CMANGOS_CORE=classic
-ARG BUILD_PLAYERBOT=OFF
+ARG BUILD_PLAYERBOTS=OFF
 ARG BUILD_AHBOT=OFF
 ARG BUILD_METRICS=OFF
 
@@ -12,13 +12,16 @@ COPY --from=database / /opt/src/database
 
 RUN mkdir -p /opt/src/cmangos/build && \
 	cd /opt/src/cmangos/build && \
-	cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_PLAYERBOT=${BUILD_PLAYERBOT} -DBUILD_AHBOT=${BUILD_AHBOT} -DBUILD_METRICS=${BUILD_METRICS} && \
+	cmake /opt/src/cmangos -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_PLAYERBOTS=${BUILD_PLAYERBOTS} -DBUILD_AHBOT=${BUILD_AHBOT} -DBUILD_METRICS=${BUILD_METRICS} && \
 	make -j $(nproc) && make install
 
 # Copy config and sql scripts
 RUN cp -r /opt/cmangos/etc /opt/cmangos/configs
 RUN mkdir -p /opt/cmangos/sql && \
 	cp -r /opt/src/cmangos/sql /opt/cmangos
+
+RUN mkdir -p /opt/cmangos/src/modules && \
+    cp -r /opt/src/cmangos/src/modules/PlayerBots /opt/cmangos/src/modules
 
 # Zero mtimes so separately built images produce identical layer digests.
 RUN find /opt/src/database -exec touch -h -d @0 {} +

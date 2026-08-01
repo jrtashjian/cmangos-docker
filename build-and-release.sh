@@ -12,7 +12,7 @@ DB_COMMIT_HASH="${DB_COMMIT_HASH:-HEAD}"
 
 variants=(wotlk)
 images=(realmd extractors)
-mangosd_types=(default) # ahbot playerbot ahbot-playerbot)
+mangosd_types=(ahbot-playerbot) #(default) # ahbot playerbot ahbot-playerbot)
 
 export DOCKER_BUILDKIT=1
 
@@ -61,7 +61,7 @@ for variant in "${variants[@]}"; do
 
 		case "$type" in
 			playerbot)
-				type_build_args+=(--build-arg BUILD_PLAYERBOT=ON)
+				type_build_args+=(--build-arg BUILD_PLAYERBOTS=ON)
 				tag_extra="-playerbot"
 				;;
 			ahbot)
@@ -69,7 +69,7 @@ for variant in "${variants[@]}"; do
 				tag_extra="-ahbot"
 				;;
 			ahbot-playerbot)
-				type_build_args+=(--build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON)
+				type_build_args+=(--build-arg BUILD_PLAYERBOTS=ON --build-arg BUILD_AHBOT=ON)
 				tag_extra="-ahbot-playerbot"
 				;;
 		esac

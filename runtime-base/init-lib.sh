@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEFAULT_DB_GRANTS="SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES"
+DEFAULT_DB_GRANTS="SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX, LOCK TABLES, CREATE TEMPORARY TABLES"
 WORLD_DB_EXTRA_GRANTS="EXECUTE, ALTER ROUTINE, CREATE ROUTINE"
 
 init_base_db_env() {
@@ -137,12 +137,13 @@ copy_configs() {
 
 # update_config "env_prefix" "config_file_path"
 update_config() {
-	CONF=($(compgen -A variable | grep "$1"))
+	CONF=($(compgen -A variable | grep "^${1}"))
 
 	for KEY in "${CONF[@]}"; do
-		CONF_KEY=${KEY#${1}}
+        CONF_KEY=$KEY
+        [[ $1 == MANGOSD_ || $1 == REALMD_ || $1 == ANTICHEAT_ ]] && CONF_KEY=${KEY#${1}}
 		CONF_KEY=${CONF_KEY//_/.}
-		sed -i "s/\(${CONF_KEY}\)[[:space:]]*=.*/\1 = \"${!KEY//\//\\/}\"/ig" "$2"
+		sed -i "s/^[[:space:]]*#*[[:space:]]*\(${CONF_KEY}\)[[:space:]]*=.*/\1 = \"${!KEY//\//\\/}\"/ig" "$2"
 	done
 }
 
@@ -169,7 +170,8 @@ create_db_config() {
 	config+=("CORE_PATH=\"/opt/cmangos\"")
 	config+=("LOCALES=\"NO\"")
 	config+=("FORCE_WAIT=\"NO\"")
-	config+=("AHBOT=\"YES\"")
+    config+=("AHBOT=\"YES\"")
+    config+=("PLAYERBOTS_DB=\"YES\"")
 
 	for line in "${config[@]}"; do
 		echo $line

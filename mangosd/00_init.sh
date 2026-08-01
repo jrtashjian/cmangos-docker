@@ -64,9 +64,9 @@ MANGOSD_DATADIR="/opt/cmangos-data"
 MANGOSD_REALMID=$REALM_ID
 
 update_config MANGOSD_ /opt/cmangos/etc/mangosd.conf
-update_config AHBOT_ /opt/cmangos/etc/ahbot.conf
 update_config ANTICHEAT_ /opt/cmangos/etc/anticheat.conf
-update_config PLAYERBOT_ /opt/cmangos/etc/playerbot.conf
+update_config AUCTIONHOUSEBOT_ /opt/cmangos/etc/ahbot.conf
+update_config AIPLAYERBOT_ /opt/cmangos/etc/aiplayerbot.conf
 
 mkdir -p $MANGOSD_LOGSDIR
 

@@ -6,6 +6,13 @@ if ! initialize; then
 	exit 1
 fi
 
+BOT_EXP_PREFIX="classic"
+if [ "$EXPANSION" = "TBC" ]; then
+    BOT_EXP_PREFIX="tbc"
+elif [ "$EXPANSION" = "WoTLK" ]; then
+    BOT_EXP_PREFIX="wotlk"
+fi
+
 if [[ "$2" == "CONTENT" ]]; then
 	echo "Installing cmangos-world content"
 
@@ -27,6 +34,29 @@ if [[ "$2" == "WORLD" ]]; then
 	fi
 fi
 
+if [[ "$2" == "WORLD" || "$2" == "CONTENT" ]]; then
+    if [ "$PLAYERBOTS_DB" == "YES" ]; then
+        echo "> Trying to apply playerbots sql mods for world db..."
+        for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/*.sql; do
+            if [ -e "$UPDATEFILE" ]; then
+                fName=$(basename "$UPDATEFILE")
+                if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+                    exit 1
+                fi
+            fi
+        done
+
+        for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
+            if [ -e "$UPDATEFILE" ]; then
+                fName=$(basename "$UPDATEFILE")
+                if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+                    exit 1
+                fi
+            fi
+        done
+    fi
+fi
+
 if [[ "$2" == "CHARACTERS" ]]; then
 	echo "Updating cmangos-characters database"
 
@@ -37,6 +67,18 @@ if [[ "$2" == "CHARACTERS" ]]; then
 	if ! apply_char_db_core_update; then
 		exit 1
 	fi
+
+    if [ "$PLAYERBOTS_DB" == "YES" ]; then
+        echo "> Trying to apply playerbots sql mods for characters db..."
+        for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql; do
+            if [ -e "$UPDATEFILE" ]; then
+                fName=$(basename "$UPDATEFILE")
+                if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+                    exit 1
+                fi
+            fi
+        done
+    fi
 fi
 
 if [[ "$2" == "LOGS" ]]; then
