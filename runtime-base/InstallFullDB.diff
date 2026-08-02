@@ -1,145 +1,169 @@
+# Non-interactive main program for Docker.
+#
+# Appended in place of InstallFullDB.sh "## Main program" (see
+# ensure_custom_install_full_db in init-lib.sh). Base schemas are created
+# earlier by ensure_database(), so we skip create_and_fill_* and only run the
+# update/content paths from InstallFullDB.sh, one install role at a time
+# ($2 = WORLD | CONTENT | CHARACTERS | LOGS | LOGIN).
 source "$1"
 
 try_set_mysql_path
 
-if ! initialize; then
-    exit 1
-fi
-
-BOT_EXP_PREFIX="classic"
-if [ "$EXPANSION" = "TBC" ]; then
-    BOT_EXP_PREFIX="tbc"
-elif [ "$EXPANSION" = "WoTLK" ]; then
-    BOT_EXP_PREFIX="wotlk"
-fi
+# mysql_query "database" "sql"
+# Silent query; on success sets MYSQL_RESULT and returns 0.
+mysql_query() {
+    export MYSQL_PWD="$MYSQL_PASSWORD"
+    MYSQL_RESULT=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$1" \
+        -e "$2" 2>/dev/null) || return 1
+}
 
 # table_exists "database" "table"
-# Returns true when the named table already exists in the given database.
 table_exists() {
-    export MYSQL_PWD="$MYSQL_PASSWORD"
-    local count
-    count=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$1" \
-        -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '$2';" 2>/dev/null)
-    [ "$count" -ge 1 ]
+    mysql_query "$1" \
+        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '$2';" \
+        || return 1
+    [ "$MYSQL_RESULT" -ge 1 ]
 }
 
 # world_content_installed
-# Returns true when the full world content db has already been imported. The
-# base mangos.sql seeds db_version.version with "Mangos default database.";
-# the content release overwrites that value during installation.
+# True once full content has replaced the mangos.sql seed version
+# ("Mangos default database."). Lets CONTENT re-runs skip apply_full_content_db.
 world_content_installed() {
-    export MYSQL_PWD="$MYSQL_PASSWORD"
-    local version
-    version=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$WORLD_DB_NAME" \
-        -e "SELECT version FROM db_version LIMIT 1;" 2>/dev/null)
-    [[ -n "$version" && "$version" != "Mangos default database"* ]]
+    mysql_query "$WORLD_DB_NAME" "SELECT version FROM db_version LIMIT 1;" || return 1
+    [[ -n "$MYSQL_RESULT" && "$MYSQL_RESULT" != "Mangos default database"* ]]
 }
 
+# apply_sql_glob "database" "glob_pattern"
+# Apply each existing file matched by glob_pattern (via execute_sql_file).
+apply_sql_glob() {
+    local db_name="$1"
+    local glob_pattern="$2"
+    local update_file file_name
+
+    for update_file in $glob_pattern; do
+        if [ -e "$update_file" ]; then
+            file_name=$(basename "$update_file")
+            if ! execute_sql_file "$db_name" "$update_file" "  - Applying $file_name"; then
+                return 1
+            fi
+        fi
+    done
+}
+
+# playerbots_expansion_prefix
+# Same EXPANSION → sql subdir map as BOT_EXP_PREFIX in apply_playerbots_db().
+playerbots_expansion_prefix() {
+    case "$EXPANSION" in
+        TBC) echo "tbc" ;;
+        WoTLK) echo "wotlk" ;;
+        *) echo "classic" ;;
+    esac
+}
+
+# apply_playerbots_world_mods
+# World half of InstallFullDB.sh::apply_playerbots_db(), with a table-marker
+# skip so restarts do not re-import. Characters half runs under CHARACTERS.
+apply_playerbots_world_mods() {
+    [ "$PLAYERBOTS_DB" = "YES" ] || return 0
+
+    if table_exists "$WORLD_DB_NAME" "ai_playerbot_rpg_races"; then
+        echo "> Playerbots world db mods already applied, skipping."
+        return 0
+    fi
+
+    local bots_sql="${CORE_PATH}/src/modules/PlayerBots/sql"
+    echo "> Trying to apply playerbots sql mods for world db..."
+    apply_sql_glob "$WORLD_DB_NAME" "${bots_sql}/world/*.sql" || return 1
+    apply_sql_glob "$WORLD_DB_NAME" "${bots_sql}/world/$(playerbots_expansion_prefix)/*.sql" || return 1
+}
+
+# apply_playerbots_characters_mods
+# Characters half of InstallFullDB.sh::apply_playerbots_db(). Marker table is
+# a bot cache — skip preserves existing bot data on restart.
+apply_playerbots_characters_mods() {
+    [ "$PLAYERBOTS_DB" = "YES" ] || return 0
+
+    if table_exists "$CHAR_DB_NAME" "ai_playerbot_equip_cache"; then
+        echo "> Playerbots characters db mods already applied, skipping (preserving bot caches)."
+        return 0
+    fi
+
+    echo "> Trying to apply playerbots sql mods for characters db..."
+    apply_sql_glob "$CHAR_DB_NAME" "${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql" || return 1
+}
+
+require() {
+    "$@" || exit 1
+}
+
+require initialize
+
+# ---------------------------------------------------------------------------
+# Per-role entry points. Upstream apply_core_update() / apply_full_content_db()
+# expect globals filled by check_dbs_accessibility(); we set only the role we
+# own because each container may only reach its own database.
+# ---------------------------------------------------------------------------
+
 if [[ "$2" == "WORLD" || "$2" == "CONTENT" ]]; then
+    # InstallFullDB.sh::check_dbs_accessibility — world branch
     get_current_db_version "$WORLD_DB_NAME" "db_version"
     DB_WORLDDB_VERSION="$CURRENT_DB_VERSION"
     DB_LAST_CONTENT_VERSION_UPDATE="$CURRENT_LAST_CONTENT_DB_VERSION"
     STATUS_WORLD_DB_FOUND=true
 
-    install_content=false
     if [[ "$2" == "CONTENT" ]]; then
+        # InstallFullDB.sh::auto_script_install_world → apply_full_content_db
         echo "Installing cmangos-world content"
         if world_content_installed; then
             echo "> Full world content db already installed, skipping."
+            # Still pick up core SQL revisions added after the content snapshot.
+            require apply_world_db_core_update
         else
-            install_content=true
+            # apply_full_content_db already calls apply_world_db_core_update.
+            require apply_full_content_db
         fi
     else
+        # InstallFullDB.sh::apply_core_update — world step only
         echo "Installing cmangos-world database"
+        require apply_world_db_core_update
     fi
 
-    if $install_content; then
-        # apply_full_content_db applies world core updates itself.
-        if ! apply_full_content_db; then
-            exit 1
-        fi
-    else
-        if ! apply_world_db_core_update; then
-            exit 1
-        fi
-    fi
-fi
-
-if [[ "$2" == "WORLD" || "$2" == "CONTENT" ]]; then
-    if [ "$PLAYERBOTS_DB" == "YES" ]; then
-        if table_exists "$WORLD_DB_NAME" "ai_playerbot_rpg_races"; then
-            echo "> Playerbots world db mods already applied, skipping."
-        else
-            echo "> Trying to apply playerbots sql mods for world db..."
-            for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/*.sql; do
-                if [ -e "$UPDATEFILE" ]; then
-                    fName=$(basename "$UPDATEFILE")
-                    if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-                        exit 1
-                    fi
-                fi
-            done
-
-            for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
-                if [ -e "$UPDATEFILE" ]; then
-                    fName=$(basename "$UPDATEFILE")
-                    if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-                        exit 1
-                    fi
-                fi
-            done
-        fi
-    fi
+    require apply_playerbots_world_mods
 fi
 
 if [[ "$2" == "CHARACTERS" ]]; then
+    # InstallFullDB.sh::check_dbs_accessibility — characters branch
+    # InstallFullDB.sh::apply_core_update — characters step only
     echo "Updating cmangos-characters database"
 
     get_current_db_version "$CHAR_DB_NAME" "character_db_version"
     DB_CHARDB_VERSION="$CURRENT_DB_VERSION"
     STATUS_CHAR_DB_FOUND=true
 
-    if ! apply_char_db_core_update; then
-        exit 1
-    fi
-
-    if [ "$PLAYERBOTS_DB" == "YES" ]; then
-        if table_exists "$CHAR_DB_NAME" "ai_playerbot_equip_cache"; then
-            echo "> Playerbots characters db mods already applied, skipping (preserving bot caches)."
-        else
-            echo "> Trying to apply playerbots sql mods for characters db..."
-            for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql; do
-                if [ -e "$UPDATEFILE" ]; then
-                    fName=$(basename "$UPDATEFILE")
-                    if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-                        exit 1
-                    fi
-                fi
-            done
-        fi
-    fi
+    require apply_char_db_core_update
+    require apply_playerbots_characters_mods
 fi
 
 if [[ "$2" == "LOGS" ]]; then
+    # InstallFullDB.sh::check_dbs_accessibility — logs branch
+    # InstallFullDB.sh::apply_core_update — logs step only
     echo "Updating cmangos-logs database"
 
     get_current_db_version "$LOGS_DB_NAME" "logs_db_version"
     DB_LOGSDB_VERSION="$CURRENT_DB_VERSION"
     STATUS_LOGS_DB_FOUND=true
 
-    if ! apply_logs_db_core_update; then
-        exit 1
-    fi
+    require apply_logs_db_core_update
 fi
 
 if [[ "$2" == "LOGIN" ]]; then
+    # InstallFullDB.sh::check_dbs_accessibility — realm branch
+    # InstallFullDB.sh::apply_core_update — realm step only
     echo "Updating cmangos-login database"
 
     get_current_db_version "$REALM_DB_NAME" "realmd_db_version"
     DB_REALMDB_VERSION="$CURRENT_DB_VERSION"
     STATUS_REALM_DB_FOUND=true
 
-    if ! apply_realm_db_core_update; then
-        exit 1
-    fi
+    require apply_realm_db_core_update
 fi
