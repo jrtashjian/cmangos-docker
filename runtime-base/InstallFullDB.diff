@@ -13,6 +13,16 @@ elif [ "$EXPANSION" = "WoTLK" ]; then
     BOT_EXP_PREFIX="wotlk"
 fi
 
+# table_exists "database" "table"
+# Returns true when the named table already exists in the given database.
+table_exists() {
+    export MYSQL_PWD="$MYSQL_PASSWORD"
+    local count
+    count=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$1" \
+        -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '$2';" 2>/dev/null)
+    [ "$count" -ge 1 ]
+}
+
 if [[ "$2" == "CONTENT" ]]; then
     echo "Installing cmangos-world content"
 
@@ -36,24 +46,28 @@ fi
 
 if [[ "$2" == "WORLD" || "$2" == "CONTENT" ]]; then
     if [ "$PLAYERBOTS_DB" == "YES" ]; then
-        echo "> Trying to apply playerbots sql mods for world db..."
-        for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/*.sql; do
-            if [ -e "$UPDATEFILE" ]; then
-                fName=$(basename "$UPDATEFILE")
-                if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-                    exit 1
+        if table_exists "$WORLD_DB_NAME" "ai_playerbot_rpg_races"; then
+            echo "> Playerbots world db mods already applied, skipping."
+        else
+            echo "> Trying to apply playerbots sql mods for world db..."
+            for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/*.sql; do
+                if [ -e "$UPDATEFILE" ]; then
+                    fName=$(basename "$UPDATEFILE")
+                    if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+                        exit 1
+                    fi
                 fi
-            fi
-        done
+            done
 
-        for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
-            if [ -e "$UPDATEFILE" ]; then
-                fName=$(basename "$UPDATEFILE")
-                if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-                    exit 1
+            for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
+                if [ -e "$UPDATEFILE" ]; then
+                    fName=$(basename "$UPDATEFILE")
+                    if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+                        exit 1
+                    fi
                 fi
-            fi
-        done
+            done
+        fi
     fi
 fi
 
@@ -69,15 +83,19 @@ if [[ "$2" == "CHARACTERS" ]]; then
     fi
 
     if [ "$PLAYERBOTS_DB" == "YES" ]; then
-        echo "> Trying to apply playerbots sql mods for characters db..."
-        for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql; do
-            if [ -e "$UPDATEFILE" ]; then
-                fName=$(basename "$UPDATEFILE")
-                if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-                    exit 1
+        if table_exists "$CHAR_DB_NAME" "ai_playerbot_equip_cache"; then
+            echo "> Playerbots characters db mods already applied, skipping (preserving bot caches)."
+        else
+            echo "> Trying to apply playerbots sql mods for characters db..."
+            for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql; do
+                if [ -e "$UPDATEFILE" ]; then
+                    fName=$(basename "$UPDATEFILE")
+                    if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+                        exit 1
+                    fi
                 fi
-            fi
-        done
+            done
+        fi
     fi
 fi
 
