@@ -23,24 +23,45 @@ table_exists() {
     [ "$count" -ge 1 ]
 }
 
-if [[ "$2" == "CONTENT" ]]; then
-    echo "Installing cmangos-world content"
+# world_content_installed
+# Returns true when the full world content db has already been imported. The
+# base mangos.sql seeds db_version.version with "Mangos default database.";
+# the content release overwrites that value during installation.
+world_content_installed() {
+    export MYSQL_PWD="$MYSQL_PASSWORD"
+    local version
+    version=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$WORLD_DB_NAME" \
+        -e "SELECT version FROM db_version LIMIT 1;" 2>/dev/null)
+    [[ -n "$version" && "$version" != "Mangos default database"* ]]
+}
 
-    if ! apply_full_content_db; then
-        exit 1
-    fi
-fi
-
-if [[ "$2" == "WORLD" ]]; then
-    echo "Installing cmangos-world database"
-
+if [[ "$2" == "WORLD" || "$2" == "CONTENT" ]]; then
     get_current_db_version "$WORLD_DB_NAME" "db_version"
     DB_WORLDDB_VERSION="$CURRENT_DB_VERSION"
     DB_LAST_CONTENT_VERSION_UPDATE="$CURRENT_LAST_CONTENT_DB_VERSION"
     STATUS_WORLD_DB_FOUND=true
 
-    if ! apply_world_db_core_update; then
-        exit 1
+    install_content=false
+    if [[ "$2" == "CONTENT" ]]; then
+        echo "Installing cmangos-world content"
+        if world_content_installed; then
+            echo "> Full world content db already installed, skipping."
+        else
+            install_content=true
+        fi
+    else
+        echo "Installing cmangos-world database"
+    fi
+
+    if $install_content; then
+        # apply_full_content_db applies world core updates itself.
+        if ! apply_full_content_db; then
+            exit 1
+        fi
+    else
+        if ! apply_world_db_core_update; then
+            exit 1
+        fi
     fi
 fi
 
