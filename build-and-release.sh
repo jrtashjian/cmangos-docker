@@ -43,9 +43,9 @@ for arg in "$@"; do
 	esac
 done
 
-variants=(classic) # classic tbc wotlk
+variants=(tbc wotlk) # classic tbc wotlk
 images=(realmd extractors) # realmd extractors
-mangosd_types=(default) # ahbot playerbot ahbot-playerbot
+mangosd_types=(default ahbot playerbot ahbot-playerbot) # default ahbot playerbot ahbot-playerbot
 
 export DOCKER_BUILDKIT=1
 
@@ -56,24 +56,28 @@ image_ref() {
 	printf '%s/%s:%s\n' "$REGISTRY" "$(printf "$IMAGE_FORMAT" "$name")" "$tag"
 }
 
-# Append -t args for latest and date tags.
+# Append -t args for each tag.
 append_tags() {
 	local image_name="$1"
 	local -n _tags=$2
-	_tags+=(-t "$(image_ref "$image_name" latest)")
-	_tags+=(-t "$(image_ref "$image_name" "$DATE_TAG")")
+	shift 2
+	local tag
+	for tag in "$@"; do
+		_tags+=(-t "$(image_ref "$image_name" "$tag")")
+	done
 }
 
-# Push tags for an image (no-op unless --push).
+# Push the given tags for an image (no-op unless --push).
 push_image() {
 	local image_name="$1"
+	shift
 	local tag
 
 	if [ "$PUSH" -eq 0 ]; then
 		return 0
 	fi
 
-	for tag in latest "${DATE_TAG}"; do
+	for tag in "$@"; do
 		docker push "$(image_ref "$image_name" "$tag")"
 	done
 }
@@ -95,11 +99,12 @@ fi
 # Shared base images (build once, reuse across variants)
 for base in builder-base runtime-base; do
 	tags=()
-	append_tags "$base" tags
+	image_tags=(latest "$DATE_TAG")
+	append_tags "$base" tags "${image_tags[@]}"
 	docker build "./$base" \
 		--label "org.opencontainers.image.source=${IMAGE_SOURCE}" \
 		"${tags[@]}"
-	push_image "$base"
+	push_image "$base" "${image_tags[@]}"
 done
 
 for variant in "${variants[@]}"; do
@@ -126,34 +131,47 @@ for variant in "${variants[@]}"; do
 		fi
 
 		tags=()
-		append_tags "$image_name" tags
+		image_tags=(latest "$DATE_TAG")
+		append_tags "$image_name" tags "${image_tags[@]}"
 		docker build "./$image" "${ctx_args[@]}" "${build_args[@]}" "${tags[@]}"
-		push_image "$image_name"
+		push_image "$image_name" "${image_tags[@]}"
 	done
 
+	# mangosd: one image name per core; feature set is encoded in tags.
+	#   default:           latest, 2026.08.05
+	#   ahbot:             with-ahbot, 2026.08.05-with-ahbot
+	#   playerbot:         with-playerbot, 2026.08.05-with-playerbot
+	#   ahbot-playerbot:   with-playerbot-ahbot, 2026.08.05-with-playerbot-ahbot
+	image_name="mangosd-${variant}"
 	for type in "${mangosd_types[@]}"; do
 		type_build_args=("${build_args[@]}")
-		tag_extra=""
+		image_tags=()
 
 		case "$type" in
+		default)
+			image_tags=(latest "$DATE_TAG")
+			;;
 		playerbot)
 			type_build_args+=(--build-arg BUILD_PLAYERBOTS=ON)
-			tag_extra="-playerbot"
+			image_tags=(with-playerbot "${DATE_TAG}-with-playerbot")
 			;;
 		ahbot)
 			type_build_args+=(--build-arg BUILD_AHBOT=ON)
-			tag_extra="-ahbot"
+			image_tags=(with-ahbot "${DATE_TAG}-with-ahbot")
 			;;
 		ahbot-playerbot)
 			type_build_args+=(--build-arg BUILD_PLAYERBOTS=ON --build-arg BUILD_AHBOT=ON)
-			tag_extra="-ahbot-playerbot"
+			image_tags=(with-playerbot-ahbot "${DATE_TAG}-with-playerbot-ahbot")
+			;;
+		*)
+			echo "error: unknown mangosd type: $type" >&2
+			exit 1
 			;;
 		esac
 
-		image_name="mangosd-${variant}${tag_extra}"
 		tags=()
-		append_tags "$image_name" tags
+		append_tags "$image_name" tags "${image_tags[@]}"
 		docker build ./mangosd "${source_args[@]}" "${type_build_args[@]}" "${tags[@]}"
-		push_image "$image_name"
+		push_image "$image_name" "${image_tags[@]}"
 	done
 done
