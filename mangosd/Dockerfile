@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
-ARG REGISTRY=registry.int.jrtashjian.com
-FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest AS builder
+ARG BUILDER_BASE=registry.int.jrtashjian.com/jrtashjian/cmangos-docker/builder-base:latest
+ARG RUNTIME_BASE=registry.int.jrtashjian.com/jrtashjian/cmangos-docker/runtime-base:latest
+FROM ${BUILDER_BASE} AS builder
 
 ARG CMANGOS_CORE=classic
 ARG BUILD_PLAYERBOTS=OFF
@@ -29,8 +30,7 @@ RUN if [ -d /opt/src/cmangos/src/modules/PlayerBots ]; then \
 RUN find /opt/src/database -exec touch -h -d @0 {} +
 
 # --- runtime ---
-ARG REGISTRY=registry.int.jrtashjian.com
-FROM ${REGISTRY}/jrtashjian/cmangos-docker/runtime-base:latest
+FROM ${RUNTIME_BASE}
 
 ARG CMANGOS_CORE
 ENV CMANGOS_CORE=${CMANGOS_CORE}

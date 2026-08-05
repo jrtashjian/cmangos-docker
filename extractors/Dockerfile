@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG REGISTRY=registry.int.jrtashjian.com
-FROM ${REGISTRY}/jrtashjian/cmangos-docker/builder-base:latest AS builder
+ARG BUILDER_BASE=registry.int.jrtashjian.com/jrtashjian/cmangos-docker/builder-base:latest
+FROM ${BUILDER_BASE} AS builder
 
 ARG CMANGOS_CORE=classic
 

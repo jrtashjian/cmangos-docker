@@ -15,7 +15,8 @@ variables:
   IMAGE_NAME: "$CI_REGISTRY_IMAGE/$IMAGE-$VARIANT"
   BUILD_ARGS: >-
     --build-arg CMANGOS_CORE=$VARIANT
-    --build-arg REGISTRY=$CI_REGISTRY
+    --build-arg BUILDER_BASE=$CI_REGISTRY_IMAGE/builder-base:latest
+    --build-arg RUNTIME_BASE=$CI_REGISTRY_IMAGE/runtime-base:latest
     --label org.opencontainers.image.source=$CI_PROJECT_URL
 
 validate-dockerfiles:
