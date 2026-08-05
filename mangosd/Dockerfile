@@ -20,8 +20,10 @@ RUN cp -r /opt/cmangos/etc /opt/cmangos/configs
 RUN mkdir -p /opt/cmangos/sql && \
 	cp -r /opt/src/cmangos/sql /opt/cmangos
 
-RUN mkdir -p /opt/cmangos/src/modules && \
-    cp -r /opt/src/cmangos/src/modules/PlayerBots /opt/cmangos/src/modules
+RUN if [ -d /opt/src/cmangos/src/modules/PlayerBots ]; then \
+	mkdir -p /opt/cmangos/src/modules && \
+	cp -r /opt/src/cmangos/src/modules/PlayerBots /opt/cmangos/src/modules; \
+	fi
 
 # Zero mtimes so separately built images produce identical layer digests.
 RUN find /opt/src/database -exec touch -h -d @0 {} +
