@@ -49,9 +49,11 @@ DB_URL="https://github.com/cmangos/${VARIANT}-db.git"
 
 # Checkout ref into dest, reusing a shallow clone when possible.
 # HEAD tracks origin's default branch tip.
+# Skips checkout when already at the target commit so file mtimes stay stable
+# and Docker build-cache inputs are not invalidated.
 checkout_ref() {
 	local url=$1 dest=$2 ref=$3
-	local fetch_ref
+	local fetch_ref target_sha current_sha
 
 	if [ "$ref" = "HEAD" ]; then
 		fetch_ref=HEAD
@@ -71,9 +73,20 @@ checkout_ref() {
 	fi
 
 	git -C "$dest" fetch --depth 1 --force origin "$fetch_ref"
-	git -C "$dest" checkout --force --detach FETCH_HEAD
+	target_sha=$(git -C "$dest" rev-parse --verify FETCH_HEAD)
+
+	if current_sha=$(git -C "$dest" rev-parse --verify HEAD 2>/dev/null) \
+		&& [ "$current_sha" = "$target_sha" ]; then
+		echo "  already at ${target_sha:0:12}; leaving working tree untouched"
+	else
+		git -C "$dest" checkout --force --detach FETCH_HEAD
+		echo "  checked out ${target_sha:0:12}"
+	fi
+
 	# Keep named-context uploads lean; .git is only needed for the next fetch.
-	printf '%s\n' '.git' >"$dest/.dockerignore"
+	if [ ! -f "$dest/.dockerignore" ] || ! grep -qxF '.git' "$dest/.dockerignore"; then
+		printf '%s\n' '.git' >"$dest/.dockerignore"
+	fi
 }
 
 echo "Fetching mangos-${VARIANT} @ ${CORE_HASH}"
