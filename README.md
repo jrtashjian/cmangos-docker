@@ -8,6 +8,21 @@ A collection of Docker images for the CMaNGOS project variants.
 - World of Warcraft - The Burning Crusade 2.4.3 (8606) used with [`cmangos-tbc`](https://github.com/cmangos/mangos-tbc)
 - World of Warcraft - Wrath of the Lich King 3.3.5 (12340) used with [`cmangos-wotlk`](https://github.com/cmangos/mangos-wotlk)
 
+## Available Images
+
+Published at `ghcr.io/jrtashjian`. Replace `<core>` with `classic`, `tbc`, or `wotlk`. Every image also has a dated tag (`YYYY.MM.DD`) for pinning.
+
+| Image | Tag | What you get |
+| --- | --- | --- |
+| `cmangos-realmd-<core>` | `latest` | Login server |
+| `cmangos-extractors-<core>` | `latest` | Client data extractors |
+| `cmangos-mangosd-<core>` | `latest` | World server |
+| | `with-ahbot` | + auction house bot |
+| | `with-playerbot` | + playerbots |
+| | `with-playerbot-ahbot` | + both bots |
+
+Examples: `ghcr.io/jrtashjian/cmangos-mangosd-classic:with-playerbot`, `ghcr.io/jrtashjian/cmangos-mangosd-classic:2026.08.05-with-ahbot`
+
 ## Quick Start Guide
 
 Create a directory on your machine to store everything:
@@ -70,7 +85,7 @@ Using the cmangos-extractors-variant container of your chosen core variant, extr
 docker run \
 	-v "/path/to/WoW/client:/client" \
 	-v "/home/$USER/cmangos-docker/extracted-data:/maps" \
-	ghcr.io/jrtashjian/cmangos-docker/extractors-classic
+	ghcr.io/jrtashjian/cmangos-extractors-classic:latest
 ```
 
 ## Creating accounts

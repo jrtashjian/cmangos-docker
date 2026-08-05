@@ -116,24 +116,34 @@ mangosd:
   script:
     - |
       case "$TYPE" in
+        default)
+          TAGS="latest $DATE_TAG"
+          ;;
         playerbot)
-          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOT=ON"
-          IMAGE_NAME="$IMAGE_NAME-playerbot"
+          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOTS=ON"
+          TAGS="with-playerbot ${DATE_TAG}-with-playerbot"
           ;;
         ahbot)
           BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_AHBOT=ON"
-          IMAGE_NAME="$IMAGE_NAME-ahbot"
+          TAGS="with-ahbot ${DATE_TAG}-with-ahbot"
           ;;
         ahbot-playerbot)
-          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOT=ON --build-arg BUILD_AHBOT=ON"
-          IMAGE_NAME="$IMAGE_NAME-ahbot-playerbot"
+          BUILD_ARGS="$BUILD_ARGS --build-arg BUILD_PLAYERBOTS=ON --build-arg BUILD_AHBOT=ON"
+          TAGS="with-playerbot-ahbot ${DATE_TAG}-with-playerbot-ahbot"
+          ;;
+        *)
+          echo "unknown mangosd type: $TYPE" >&2
+          exit 1
           ;;
       esac
-    - >-
-      docker build ./$IMAGE --no-cache $BUILD_ARGS
-      -t $IMAGE_NAME:latest
-      -t $IMAGE_NAME:$DATE_TAG
-    - docker push $IMAGE_NAME:latest
-    - docker push $IMAGE_NAME:$DATE_TAG
+      TAG_ARGS=""
+      for tag in $TAGS; do
+        TAG_ARGS="$TAG_ARGS -t $IMAGE_NAME:$tag"
+      done
+    - docker build ./$IMAGE --no-cache $BUILD_ARGS $TAG_ARGS
+    - |
+      for tag in $TAGS; do
+        docker push "$IMAGE_NAME:$tag"
+      done
   tags:
     - large
