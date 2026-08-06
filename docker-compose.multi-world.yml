@@ -17,7 +17,7 @@ services:
       start_period: 30s
 
   realmd:
-    image: ghcr.io/jrtashjian/cmangos-realmd-${CORE_VARIANT}:master
+    image: ghcr.io/jrtashjian/cmangos-realmd-${CORE_VARIANT}:latest
     depends_on:
       database:
         condition: service_healthy
@@ -35,7 +35,7 @@ services:
       start_period: 120s
 
   mangosd_one:
-    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:master
+    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:latest
     depends_on:
       database:
         condition: service_healthy
@@ -44,7 +44,7 @@ services:
     env_file: .env
     environment:
       REALM_ID: 1
-      REALM_NAME: "MangosD One"
+      REALM_NAME: "CMaNGOS One"
       REALM_ADDRESS: "127.0.0.1"
       REALM_PORT: 8085
       WORLD_DB_NAME: "mangosd_one_world"
@@ -64,7 +64,7 @@ services:
       start_period: 600s
 
   mangosd_two:
-    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:master
+    image: ghcr.io/jrtashjian/cmangos-mangosd-${CORE_VARIANT}:latest
     depends_on:
       database:
         condition: service_healthy
@@ -73,7 +73,7 @@ services:
     env_file: .env
     environment:
       REALM_ID: 2
-      REALM_NAME: "MangosD Two"
+      REALM_NAME: "CMaNGOS Two"
       REALM_ADDRESS: "127.0.0.1"
       REALM_PORT: 8086
       WORLD_DB_NAME: "mangosd_two_world"
