@@ -8,9 +8,9 @@ services:
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:
-      - "./data/database:/var/lib/mysql"
+      - database_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -25,10 +25,10 @@ services:
     ports:
       - 3724:3724
     volumes:
-      - "./data/realmd_etc:/opt/cmangos/etc"
+      - realmd_etc:/opt/cmangos/etc
       - "/etc/localtime:/etc/localtime:ro"
     healthcheck:
-      test: ["CMD", "check-port", "3724"]
+      test: [ "CMD", "check-port", "3724" ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -53,11 +53,11 @@ services:
     ports:
       - 8085:8085
     volumes:
-      - "./data/mangosd_etc:/opt/cmangos/etc"
+      - mangosd_one_etc:/opt/cmangos/etc
       - "/etc/localtime:/etc/localtime:ro"
       - "./extracted-data:/opt/cmangos-data:ro"
     healthcheck:
-      test: ["CMD", "check-port", "8085"]
+      test: [ "CMD", "check-port", "8085" ]
       interval: 15s
       timeout: 5s
       retries: 12
@@ -82,12 +82,22 @@ services:
     ports:
       - 8086:8085
     volumes:
-      - "./data/mangosd_etc:/opt/cmangos/etc"
+      - mangosd_two_etc:/opt/cmangos/etc
       - "/etc/localtime:/etc/localtime:ro"
       - "./extracted-data:/opt/cmangos-data:ro"
     healthcheck:
-      test: ["CMD", "check-port", "8085"]
+      test: [ "CMD", "check-port", "8085" ]
       interval: 15s
       timeout: 5s
       retries: 12
       start_period: 600s
+
+volumes:
+  database_data:
+    name: ${CORE_VARIANT}_database
+  realmd_etc:
+    name: ${CORE_VARIANT}_realmd_etc
+  mangosd_one_etc:
+    name: ${CORE_VARIANT}_mangosd_one_etc
+  mangosd_two_etc:
+    name: ${CORE_VARIANT}_mangosd_two_etc
