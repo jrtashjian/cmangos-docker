@@ -43,7 +43,7 @@ for arg in "$@"; do
 	esac
 done
 
-variants=(tbc wotlk) # classic tbc wotlk
+variants=(classic tbc wotlk) # classic tbc wotlk
 images=(realmd extractors) # realmd extractors
 mangosd_types=(default ahbot playerbot ahbot-playerbot) # default ahbot playerbot ahbot-playerbot
 
