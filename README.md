@@ -1,53 +1,86 @@
 # [CMaNGOS](https://cmangos.net) powered by Docker
 
-A collection of Docker images for the CMaNGOS project variants.
+A collection of Docker images and compose files for running [CMaNGOS](https://cmangos.net) locally.
 
-## Supported Variants and Clients
+## Supported clients
 
-- World of Warcraft 1.12.1 (5875) used with [`cmangos-classic`](https://github.com/cmangos/mangos-classic)
-- World of Warcraft - The Burning Crusade 2.4.3 (8606) used with [`cmangos-tbc`](https://github.com/cmangos/mangos-tbc)
-- World of Warcraft - Wrath of the Lich King 3.3.5 (12340) used with [`cmangos-wotlk`](https://github.com/cmangos/mangos-wotlk)
+| Client | Build | Core |
+| --- | --- | --- |
+| World of Warcraft | 1.12.1 (5875) | [cmangos-classic](https://github.com/cmangos/mangos-classic) |
+| The Burning Crusade | 2.4.3 (8606) | [cmangos-tbc](https://github.com/cmangos/mangos-tbc) |
+| Wrath of the Lich King | 3.3.5 (12340) | [cmangos-wotlk](https://github.com/cmangos/mangos-wotlk) |
 
-## Available Images
+## Available images
 
-Published at `ghcr.io/jrtashjian`. Replace `<core>` with `classic`, `tbc`, or `wotlk`. Every image also has a dated tag (`YYYY.MM.DD`) for pinning.
+Images are published to `ghcr.io/jrtashjian`. Replace `<core>` with `classic`, `tbc`, or `wotlk`.
+
+Every image is also tagged with a build date (`YYYY.MM.DD`) so you can pin a known release instead of tracking `latest`.
 
 | Image | Tag | What you get |
 | --- | --- | --- |
 | `cmangos-realmd-<core>` | `latest` | Login server |
 | `cmangos-extractors-<core>` | `latest` | Client data extractors |
-| `cmangos-mangosd-<core>` | `latest` | World server |
-| | `with-ahbot` | + auction house bot |
-| | `with-playerbot` | + playerbots |
-| | `with-playerbot-ahbot` | + both bots |
+| `cmangos-mangosd-<core>` | `latest` | World server (default build) |
+| | `with-ahbot` | World server + auction house bot |
+| | `with-playerbot` | World server + playerbots |
+| | `with-playerbot-ahbot` | World server + both bots |
 
-Examples: `ghcr.io/jrtashjian/cmangos-mangosd-classic:with-playerbot`, `ghcr.io/jrtashjian/cmangos-mangosd-classic:2026.08.05-with-ahbot`
+Examples:
 
-## Quick Start Guide
-
-Create a directory on your machine to store everything:
 ```
+ghcr.io/jrtashjian/cmangos-mangosd-classic:latest
+ghcr.io/jrtashjian/cmangos-mangosd-classic:with-playerbot
+ghcr.io/jrtashjian/cmangos-mangosd-classic:2026.08.05-with-ahbot
+```
+
+To use a bot-enabled world server with compose, change the `mangosd` image tag in your `docker-compose.yml`.
+
+## Quick start
+
+### 1. Create a working directory
+
+```bash
 mkdir ~/cmangos-docker && cd ~/cmangos-docker
 ```
 
-Copy one of the pre-configured docker-compose files onto your machine for the variant you want to run.
+This directory will hold your compose file and extracted client data.
 
-If you want `cmangos-classic`:
-```
+### 2. Download a compose file
+
+Pick the core that matches your WoW client.
+
+If you want classic:
+
+```bash
 wget -O docker-compose.yml https://raw.githubusercontent.com/jrtashjian/cmangos-docker/master/docker-compose.classic.yml
 ```
 
-If you want `cmangos-tbc`:
-```
+If you want TBC:
+
+```bash
 wget -O docker-compose.yml https://raw.githubusercontent.com/jrtashjian/cmangos-docker/master/docker-compose.tbc.yml
 ```
 
-If you want `cmangos-wotlk`:
-```
+If you want WotLK:
+
+```bash
 wget -O docker-compose.yml https://raw.githubusercontent.com/jrtashjian/cmangos-docker/master/docker-compose.wotlk.yml
 ```
 
-Place the [extracted client data files](#extracting-client-data) (Cameras, dbc, maps, mmaps, vmaps) into a volume or folder which will be mapped into a container.
+### 3. Extract client data
+
+CMaNGOS needs data extracted from a real WoW client (Cameras, dbc, maps, mmaps, vmaps). Run the extractors image once, pointing it at your client install and an output folder.
+
+Replace `classic` with `tbc` or `wotlk` if needed, and update the client path:
+
+```bash
+docker run --rm \
+	-v "/path/to/WoW/client:/client" \
+	-v "$HOME/cmangos-docker/extracted-data:/maps" \
+	ghcr.io/jrtashjian/cmangos-extractors-classic:latest
+```
+
+When finished you should have:
 
 ```
 ~/cmangos-docker/extracted-data
@@ -58,15 +91,33 @@ Place the [extracted client data files](#extracting-client-data) (Cameras, dbc, 
 └─ vmaps
 ```
 
-Run `docker-compose up` to start your server!
+The compose files mount `./extracted-data` into the world server automatically.
 
-Update your World of Warcraft client's `realmlist.wtf` file to point to your localhost IP address.
+### 4. Start the server
+
+```bash
+docker compose up -d
+```
+
+This starts MariaDB, the login server (`realmd`), and the world server (`mangosd`). On first boot, mangosd installs the [latest full content database](https://github.com/orgs/cmangos/repositories?q=-db) — that can take a while.
+
+Check progress with:
+
+```bash
+docker compose logs -f mangosd
+```
+
+### 5. Point your client at the server
+
+Edit your WoW client's `realmlist.wtf`:
 
 ```
 set realmlist 127.0.0.1
 ```
 
-Login with your client using the default username:password combos (unless `ACCOUNTS` is set, in which case these are replaced by your configured accounts):
+### 6. Log in
+
+Default accounts (unless you configure `ACCOUNTS`):
 
 ```
 ADMINISTRATOR:ADMINISTRATOR
@@ -75,54 +126,57 @@ MODERATOR:MODERATOR
 PLAYER:PLAYER
 ```
 
-You are now running local server for the core variant you chose with the [latest full content database](https://github.com/orgs/cmangos/repositories?q=-db).
+## Advanced setup
 
-## Extracting client data
+For custom configuration, use the example compose file with a `.env`:
 
-Using the cmangos-extractors-variant container of your chosen core variant, extract the required client data like this:
-
+```bash
+mkdir ~/cmangos-docker && cd ~/cmangos-docker
+wget -O docker-compose.yml https://raw.githubusercontent.com/jrtashjian/cmangos-docker/master/docker-compose.example.yml
+wget -O .env https://raw.githubusercontent.com/jrtashjian/cmangos-docker/master/.env.example
 ```
-docker run \
-	-v "/path/to/WoW/client:/client" \
-	-v "/home/$USER/cmangos-docker/extracted-data:/maps" \
-	ghcr.io/jrtashjian/cmangos-extractors-classic:latest
+
+Edit `.env` — at minimum set `CORE_VARIANT` (`classic`, `tbc`, or `wotlk`). Other options cover database credentials, separate DB hosts, accounts, and server settings.
+
+Extract client data into `./extracted-data` (same as quick start), then:
+
+```bash
+docker compose up -d
 ```
+
+To use a bot-enabled mangosd image, change the image tag in `docker-compose.yml` (for example `:with-playerbot`).
 
 ## Creating accounts
 
-### Automated (env var)
+### Automated
 
-Set the `ACCOUNTS` variable in your `.env` file. When present, the four default seed accounts (`ADMINISTRATOR`, `GAMEMASTER`, `MODERATOR`, `PLAYER`) are removed and replaced with the accounts you define. Expansion is derived automatically from `CORE_VARIANT`.
+Create a `.env` file next to `docker-compose.yml` and set `ACCOUNTS`. When present, the four default seed accounts are removed and replaced with the ones you define:
 
 ```bash
 # Format: username:password[:gmlevel],...
-# username: letters/digits only; gmlevel: 0=PLAYER, 1=MODERATOR, 2=GAMEMASTER, 3=ADMINISTRATOR
+# username: letters and digits only
+# gmlevel: 0=PLAYER, 1=MODERATOR, 2=GAMEMASTER, 3=ADMINISTRATOR
 ACCOUNTS=admin:changeme:3,player:changeme
 ```
 
-Accounts are upserted each time `realmd` starts. Default seed accounts not listed in `ACCOUNTS` are removed.
+Accounts are created or updated each time `realmd` starts.
 
-### Manual (console)
+### Manual
 
-Ensure the database and realmd services are running:
-
-```bash
-docker compose up database realmd
-```
-
-Start the mangosd server with console access enabled:
+Start the database and login server, then open a mangosd console:
 
 ```bash
+docker compose up -d database realmd
 docker compose run --rm -e MANGOSD_CONSOLE_ENABLE=1 mangosd
 ```
 
-In the mangosd console, create a new user account (replace `username` and `password` with your desired credentials):
+In the console:
 
 ```
 account create username password
 ```
 
-For more details, see the [official instructions](https://github.com/cmangos/issues/wiki/Installation-Instructions#creating-first-account).
+For more detail, see the [official CMaNGOS instructions](https://github.com/cmangos/issues/wiki/Installation-Instructions#creating-first-account).
 
 ## Credits
 
